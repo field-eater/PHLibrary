@@ -14,10 +14,13 @@ class Borrow extends Model
 
     protected $fillable = [
         'student_id',
+        'book_id',
         'book_copy_id',
         'date_borrowed',
+        'estimated_return_date',
         'date_returned',
         'return_status',
+        'remarks',
     ];
 
     public function student(): BelongsTo
@@ -25,9 +28,9 @@ class Borrow extends Model
         return $this->belongsTo(Student::class);
     }
 
-    public function book(): BelongsToMany
+    public function book(): BelongsTo
     {
-        return $this->belongsToMany(Book::class);
+        return $this->belongsTo(Book::class);
     }
 
 

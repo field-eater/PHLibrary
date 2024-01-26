@@ -20,6 +20,7 @@ class CreateBorrow extends CreateRecord
     {
         $bookCopy =  BookCopy::where('book_id', $data['book_copy_id'])->get();
         // dd($bookCopy);
+        $data['book_id'] = $data['book_copy_id'];
 
         foreach($bookCopy as $copy)
         {

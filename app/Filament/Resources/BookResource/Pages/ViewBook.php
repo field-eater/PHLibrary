@@ -23,6 +23,7 @@ class ViewBook extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+
             Actions\Action::make('Borrow')
                 ->icon('heroicon-m-hand-raised')
                 ->requiresConfirmation()
@@ -51,6 +52,7 @@ class ViewBook extends ViewRecord
                                 Borrow::create([
                                     'student_id' => $data['student_id'],
                                     'date_borrowed' => $data['date_borrowed'],
+                                    'book_id' => $record->id,
                                     'book_copy_id' => $copy->id,
                                     'return_status' => BorrowStatusEnum::Pending,
 

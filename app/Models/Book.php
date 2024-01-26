@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -25,7 +26,12 @@ class Book extends Model
     ];
 
 
-
+    // protected function dateBorrowed(): Attribute
+    // {
+    //     return Attribute::make(
+    //         get: fn ($value) => date_format($value, 'M d, Y'),
+    //     );
+    // }
 
 
     public function bookcopies()
@@ -46,6 +52,11 @@ class Book extends Model
     public function author(): BelongsTo
     {
         return $this->belongsTo(Author::class);
+    }
+
+    public function borrows(): HasMany
+    {
+        return $this->HasMany(Borrow::class);
     }
 
 

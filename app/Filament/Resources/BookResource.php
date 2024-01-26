@@ -3,9 +3,11 @@
 namespace App\Filament\Resources;
 
 use App\Enums\BookCopyStatusEnum;
+use App\Enums\BorrowStatusEnum;
 use App\Filament\Resources\BookResource\Pages;
 use App\Filament\Resources\BookResource\RelationManagers;
 use App\Filament\Resources\BookResource\RelationManagers\BorrowsRelationManager;
+use App\Livewire\RecentBorrows;
 use App\Models\Author;
 use App\Models\Book;
 use App\Models\BookCopy;
@@ -16,6 +18,7 @@ use App\Models\Student;
 use App\Models\User;
 use Carbon\Carbon;
 use Filament\Forms;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Actions as InfoActions;
@@ -23,6 +26,7 @@ use Filament\Infolists\Components\Actions\Action as InfoAction;
 
 use Filament\Infolists\Components\Grid as InfoGrid;
 use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\Livewire;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\Split as InfoSplit;
@@ -30,6 +34,7 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\TextEntry\TextEntrySize;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\FontWeight;
 use Filament\Support\Enums\IconPosition;
 use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
@@ -37,7 +42,9 @@ use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Table;
 use IbrahimBougaoua\FilamentRatingStar\Actions\RatingStar;
+use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
 
@@ -82,7 +89,18 @@ class BookResource extends Resource
                     ->required()
                     ->maxLength(255),
                 Forms\Components\Select::make('publication_date')
-                    ->options(fn () => [range(Carbon::now()->year, 1900)])
+                    ->options(function ()
+                    {
+                        $years = range(date('Y') - 300, date('Y'));
+
+                        // Create an array with years as keys and formatted date strings as values
+                        $yearsWithDates = array_combine($years, array_map(function ($year) {
+                            return substr(date('Y-m-d', strtotime($year . '-01-01')), 0, -6);
+                        }, $years));
+
+                        return array_reverse($yearsWithDates, true);
+                    })
+                    ->searchable()
                     ->required(),
                 Forms\Components\Textarea::make('book_details')
                     ->required()
@@ -96,6 +114,8 @@ class BookResource extends Resource
 
     public static function infolist(Infolist $infolist): Infolist
     {
+
+
         return $infolist
             ->schema([
                 InfoGrid::make(6)
@@ -213,42 +233,27 @@ class BookResource extends Resource
                             ])
                             ->compact()
                             ->columnSpan(1),
-                        Section::make('Latest Borrows')
-                            ->compact()
-                            ->schema([
-                                RepeatableEntry::make('borrows')
-                                ->extraAttributes(['class' => 'divide-y-4 divide-gray-200'])
-                                ->label('')
-                                ->contained(false)
-                                ->schema([
-                                    InfoGrid::make(3)
-                                    ->schema([
-                                        TextEntry::make('student_id')
-                                            ->formatStateUsing(function (Student $student, $state)
-                                            {
-                                                $studentId = $student->find($state)->pluck('user_id');
-                                                $borrowingUserName = User::find($studentId)->value('first_name').' '.User::find($studentId)->value('last_name');
-                                                return $borrowingUserName;
-                                            })
-                                            ->label('')
-                                            ->helperText(fn ($record) => Carbon::parse($record->date_borrowed)->format('M d, Y'))
-                                            ->weight('bold')
-                                            ->columnSpan(2),
-                                        TextEntry::make('return_status')
-                                            ->label('')
-                                            ->badge()
-                                            ->columnSpan(1),
-                                    ]),
 
-                                ]),
-
-
-
-
-                            ])
+                            Livewire::make(RecentBorrows::class)
+                            // , ['book' => $book]
+                            //TODO: Figure out a way to implement relationships
                             ->columnSpan(2),
-                            ])
-                            ->columnSpan(2)
+                           InfoActions::make([
+                                InfoAction::make('ratings')
+                                ->outlined()
+                                ->icon('heroicon-o-star')
+                                ->color('warning')
+                                ->slideOver()
+                                ->modalContent(fn (Rating $rating): View => view(
+                                    'filament.pages.actions.advance',
+                                    ['record' => $rating],
+                                ))
+                                //MODIFY TOMORROW
+                                ])
+                                ->fullWidth()
+                                ->columnSpan(2)
+                           ])
+                           ->columnSpan(2)
 
                 ])
 
@@ -278,6 +283,7 @@ class BookResource extends Resource
 
                         } )
                         ->searchable(),
+
                     Tables\Columns\TextColumn::make('rating')
                         ->icon('heroicon-m-star')
                         ->color('warning')

@@ -18,8 +18,11 @@ use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords\Tab;
 use Filament\Resources\Resource;
@@ -67,8 +70,17 @@ class BorrowResource extends Resource
                         return true;
                     })
                     ->required(),
+                    // ->live()
+                    // ->afterStateUpdated(function (?string $state, ?string $old, Set $set) {
+                    //     // ...
+                    //     $set('book_id', $state);
+                    // }),
+                    // TextInput::make('book_id'),
+                    // // TODO: Ilipat sa lifecycle ng borrows
 
                     DatePicker::make('date_borrowed')
+                    ->required(),
+                    DatePicker::make('estimated_return_date')
                     ->required(),
                ])
             ]);
@@ -98,17 +110,30 @@ class BorrowResource extends Resource
                 ->badge()
 
                 ->label('Borrowed Book'),
+
+
+
                 // ->hiddenOn(BorrowsRelationManager::class),
                 TextColumn::make('date_borrowed')
+                ->label('Issued Date')
                 ->sortable()
                 ->date(),
+                TextColumn::make('estimated_return_date')
+                ->label('Estimated Return Date')
+                ->default('')
+                // ->hiddenOn(BorrowsRelationManager::class)
+                ->date(),
                 TextColumn::make('date_returned')
+                ->label('Actual Return Date')
                 ->default('')
                 // ->hiddenOn(BorrowsRelationManager::class)
                 ->date(),
                 TextColumn::make('return_status')
                 ->label('Status')
-                ->badge()
+                ->badge(),
+                TextColumn::make('remarks')
+                ->label('Remarks')
+                ->wrap()
 
             ])
             ->filters([
@@ -120,10 +145,12 @@ class BorrowResource extends Resource
                 ->visible(fn ($record) => $record->date_returned == NULL)
                 ->form([
                     DatePicker::make('date_returned'),
+                    Textarea::make('remarks'),
                 ])
                 ->modalWidth('sm')
                 ->action(function ($record, Array $data) {
                     $record->date_returned = $data['date_returned'];
+                    $record->remarks = $data['remarks'];
                     $record->return_status = BorrowStatusEnum::Returned;
                     $record->save();
 
