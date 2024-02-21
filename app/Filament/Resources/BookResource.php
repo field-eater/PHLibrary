@@ -57,7 +57,6 @@ class BookResource extends Resource
     protected static ?string $navigationGroup = 'Book Management';
 
 
-
     public static function form(Form $form): Form
     {
         return $form
@@ -233,28 +232,11 @@ class BookResource extends Resource
                             ])
                             ->compact()
                             ->columnSpan(1),
-
-                            Livewire::make(RecentBorrows::class)
-                            // , ['book' => $book]
-                            //TODO: Figure out a way to implement relationships
+                        Livewire::make(RecentBorrows::class)
                             ->columnSpan(2),
-                           InfoActions::make([
-                                InfoAction::make('ratings')
-                                ->outlined()
-                                ->icon('heroicon-o-star')
-                                ->color('warning')
-                                ->slideOver()
-                                ->modalContent(fn (Rating $rating): View => view(
-                                    'filament.pages.actions.advance',
-                                    ['record' => $rating],
-                                ))
-                                //MODIFY TOMORROW
-                                ])
-                                ->fullWidth()
-                                ->columnSpan(2)
-                           ])
-                           ->columnSpan(2)
 
+                        ])
+                        ->columnSpan(2)
                 ])
 
             ])
@@ -306,7 +288,6 @@ class BookResource extends Resource
                     ->description('Copies', position: 'above')
                     ->formatStateUsing(function ($record)
                     {
-
                         $copy = BookCopy::where('book_id', $record->id)->where('status', BookCopyStatusEnum::Available)->count();
                         return ($copy !== 0) ? "{$copy}/{$record->available_copies}": BookCopyStatusEnum::Unavailable;
                     })

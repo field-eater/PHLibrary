@@ -90,11 +90,6 @@ class RatingResource extends Resource
                 Tables\Columns\TextColumn::make('user_id')
                     ->label('User Name')
                     ->alignment(Alignment::End)
-                    ->formatStateUsing(function ($state) {
-                        $name = User::find($state);
-
-                        return $name->user_name;
-                    })
 
                     ->sortable(),
                 Tables\Columns\TextColumn::make('rating_score')
@@ -102,6 +97,7 @@ class RatingResource extends Resource
                     ->color('warning')
                     ->formatStateUsing(fn ($state) => "{$state}/5")
                     ->summarize(Average::make()),
+                Tables\Columns\TextColumn::make('created_at'),
 
 
 

@@ -13,6 +13,7 @@ use Filament\Actions;
 use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Pages\ViewRecord;
 
 class ViewBook extends ViewRecord
@@ -64,6 +65,8 @@ class ViewBook extends ViewRecord
                     })
                 ->outlined()
                 ->disabled(fn ($record): bool => (BookCopy::where('book_id', $record->id)->where('status', BookCopyStatusEnum::Available)->count() == 0)),
+
+
            ActionGroup::make([
             Actions\EditAction::make()
             ->color('warning')

@@ -59,6 +59,10 @@ class Book extends Model
         return $this->HasMany(Borrow::class);
     }
 
+    public function getLastBorrowed(Borrow $borrow)
+    {
+        return $borrow->whereBelongsTo(Book::class)->desc()->first();
+    }
 
 
     protected static function boot()

@@ -23,6 +23,7 @@ class Borrow extends Model
         'remarks',
     ];
 
+
     public function student(): BelongsTo
     {
         return $this->belongsTo(Student::class);
@@ -31,6 +32,11 @@ class Borrow extends Model
     public function book(): BelongsTo
     {
         return $this->belongsTo(Book::class);
+    }
+
+    public function bookBorrowedPending(): BelongsTo
+    {
+        return $this->belongsTo(Book::class)->where('return_status', BorrowStatusEnum::Pending);
     }
 
 
