@@ -7,6 +7,7 @@ use App\Enums\BorrowStatusEnum;
 use App\Filament\Resources\BookResource\Pages;
 use App\Filament\Resources\BookResource\RelationManagers;
 use App\Filament\Resources\BookResource\RelationManagers\BorrowsRelationManager;
+use App\Filament\Resources\BookResource\RelationManagers\RatingsRelationManager;
 use App\Livewire\RecentBorrows;
 use App\Models\Author;
 use App\Models\Book;
@@ -326,7 +327,7 @@ class BookResource extends Resource
     {
         return [
             //
-            // BorrowsRelationManager::class,
+             RatingsRelationManager::class,
         ];
     }
 
