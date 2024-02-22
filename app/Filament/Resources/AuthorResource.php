@@ -39,73 +39,67 @@ class AuthorResource extends Resource
     protected static ?string $navigationGroup = 'Book Management';
     protected static ?string $navigationParentItem = 'Books';
 
-
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                FormGrid::make(2)
-                ->schema([
-                    Forms\Components\FileUpload::make('author_image')
+        return $form->schema([
+            FormGrid::make(2)->schema([
+                Forms\Components\FileUpload::make('author_image')
                     ->image()
-                    ->label('')
                     ->required()
                     ->columnSpan(1),
-                    FormGrid::make(1)
+                FormGrid::make(1)
                     ->schema([
                         Forms\Components\TextInput::make('author_first_name')
-                        ->label('First Name')
-                        ->required()
-                        ->maxLength(255),
-                    Forms\Components\TextInput::make('author_last_name')
-                        ->label('Last Name')
-                        ->required()
-                        ->maxLength(255),
-                    ])->columnSpan(1),
-                    Forms\Components\Textarea::make('author_details')
-                        ->label('Details')
-                        ->required()
-                        ->autosize()
-                        ->maxLength(65535)
-                        ->columnSpanFull(),
-                ]),
-
-
-
-            ]);
+                            ->label('First Name')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('author_last_name')
+                            ->label('Last Name')
+                            ->required()
+                            ->maxLength(255),
+                    ])
+                    ->columnSpan(1),
+                Forms\Components\Textarea::make('author_details')
+                    ->label('Details')
+                    ->required()
+                    ->autosize()
+                    ->maxLength(65535)
+                    ->columnSpanFull(),
+            ]),
+        ]);
     }
 
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist->schema([
-
-                Split::make([
-                        ImageEntry::make('author_image')
-                        ->label('')
-                        ->height(300)
-                        ->grow(false),
-                      Section::make(fn (Author $record):string => "{$record->author_first_name}  {$record->author_last_name}")
-                      ->schema([
-                        TextEntry::make('author_details')
+            Split::make([
+                ImageEntry::make('author_image')
+                    ->label('')
+                    ->height(300)
+                    ->grow(false),
+                Section::make(
+                    fn(
+                        Author $record
+                    ): string => "{$record->author_first_name}  {$record->author_last_name}"
+                )->schema([
+                    TextEntry::make('author_details')
                         ->label('')
                         ->prose(),
-                        Split::make([
-                            TextEntry::make('created_at')
-                                ->badge()
-                                ->color('gray')
-                                ->date(),
-                            TextEntry::make('updated_at')
-                                ->badge()
-                                ->color('gray')
-                                ->since(),
-                        ]),
-                      ]),
-
-
-                ])
+                    Split::make([
+                        TextEntry::make('created_at')
+                            ->badge()
+                            ->color('gray')
+                            ->date(),
+                        TextEntry::make('updated_at')
+                            ->badge()
+                            ->color('gray')
+                            ->since(),
+                    ]),
+                ]),
+            ])
                 ->columnSpanFull()
                 ->from('md'),
-            ]);
+        ]);
     }
 
     public static function table(Table $table): Table
@@ -119,16 +113,21 @@ class AuthorResource extends Resource
             ->columns([
                 Stack::make([
                     Tables\Columns\ImageColumn::make('author_image')
-                ->label('')
-                ->square()
-                ->size(80),
-                Tables\Columns\TextColumn::make('author_first_name')
-                ->weight('bold')
-                ->label('Name')
-                ->formatStateUsing(fn (Author $record):string => "{$record->author_first_name}  {$record->author_last_name}")
-                    ->searchable()
-                    ->wrap(),
-                ])
+                        ->label('')
+                        ->circular()
+                        ->size(100)
+                        ->alignCenter(),
+                    Tables\Columns\TextColumn::make('author_first_name')
+                        ->weight('bold')
+                        ->label('Name')
+                        ->formatStateUsing(
+                            fn(
+                                Author $record
+                            ): string => "{$record->author_first_name}  {$record->author_last_name}"
+                        )
+                        ->searchable()
+                        ->wrap(),
+                ])->space(3),
             ])
             ->filters([
                 //
@@ -140,11 +139,7 @@ class AuthorResource extends Resource
                     ->slideOver()
                     ->modalWidth(MaxWidth::Large),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+            ->bulkActions([]);
     }
 
     public static function getRelations(): array

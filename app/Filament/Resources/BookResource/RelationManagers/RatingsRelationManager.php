@@ -27,44 +27,43 @@ class RatingsRelationManager extends RelationManager
 
     public function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('user_id')
-                    ->required()
-                    ->maxLength(255),
-            ]);
+        return $form->schema([
+            Forms\Components\TextInput::make('user_id')
+                ->required()
+                ->maxLength(255),
+        ]);
     }
 
     public function table(Table $table): Table
     {
         return $table
             ->recordTitleAttribute('user_id')
-            ->modifyQueryUsing(fn (Builder $query) => $query->orderBy('created_at', 'desc'))
+            ->modifyQueryUsing(
+                fn(Builder $query) => $query->orderBy('created_at', 'desc')
+            )
             ->contentGrid([
                 'md' => 2,
                 'xl' => 3,
             ])
             ->columns([
-               Stack::make([
+                Stack::make([
                     Split::make([
-
                         // TODO: create an avatar column once avatar image is added to database
 
                         Tables\Columns\TextColumn::make('user.user_name')
-                        ->searchable()
-                        ->label('name')
-                        ->grow(false),
-                        RatingColumn::make('rating_score'),
+                            ->searchable()
+                            ->label('name')
+                            ->grow(false),
+
                         Tables\Columns\TextColumn::make('created_at')
-                        ->date()
-                        ->since()
-                        ->label('date'),
-                ]),
+                            ->date()
+                            ->since()
+                            ->alignEnd()
+                            ->label('date'),
+                    ]),
+                    RatingColumn::make('rating_score'),
                     Tables\Columns\TextColumn::make('comment'),
-               ])->space(3)
-
-
-
+                ])->space(3),
             ])
             ->filters([
                 //
@@ -73,26 +72,16 @@ class RatingsRelationManager extends RelationManager
                 //     // ...
                 //     DateConstraint::make('created_at')
                 // ]),
-                SelectFilter::make('rating_score')
-                ->options([
+                SelectFilter::make('rating_score')->options([
                     5 => '5 Stars',
                     4 => '4 Stars',
                     3 => '3 Stars',
                     2 => '2 Stars',
                     1 => '1 Stars',
-                ])
-            ])
-            ->headerActions([
-                Tables\Actions\CreateAction::make(),
-            ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->headerActions([])
+            ->actions([])
+            ->bulkActions([]);
     }
 }

@@ -22,6 +22,7 @@ use Filament\Tables\Table;
 use IbrahimBougaoua\FilamentRatingStar\Actions\RatingStar;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Yepsua\Filament\Tables\Components\RatingColumn;
 
 class RatingResource extends Resource
 {
@@ -33,54 +34,54 @@ class RatingResource extends Resource
 
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('user_id')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\Select::make('book_id')
-                    ->relationship('book', 'id')
-                    ->required(),
-                RatingStar::make('rating_score')
-                    ->required(),
-                Forms\Components\Textarea::make('comment')
-                    ->maxLength(65535)
-                    ->columnSpanFull(),
-            ]);
+        return $form->schema([
+            Forms\Components\TextInput::make('user_id')
+                ->required()
+                ->numeric(),
+            Forms\Components\Select::make('book_id')
+                ->relationship('book', 'id')
+                ->required(),
+            RatingStar::make('rating_score')->required(),
+            Forms\Components\Textarea::make('comment')
+                ->maxLength(65535)
+                ->columnSpanFull(),
+        ]);
     }
 
     public static function infolist(Infolist $infolist): Infolist
     {
-        return $infolist
-            ->schema([
-
-            ]);
+        return $infolist->schema([]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->orderBy('created_at', 'desc'))
+            ->defaultGroup('book_id')
+            ->modifyQueryUsing(
+                fn(Builder $query) => $query->orderBy('created_at', 'desc')
+            )
             ->groups([
                 Group::make('book_id')
-                ->collapsible()
-                ->label('Book')
-                ->getTitleFromRecordUsing(function (Rating $record) {
-                    $book = Book::find($record->book_id);
-                    return $book->book_name;
-                })
-                ->getDescriptionFromRecordUsing(function (Rating $record) {
-
-                    $book = Book::find($record->book_id);
-                    $author = Author::whereRelation('books', 'author_id', $book->author_id)->get(['author_first_name', 'author_last_name']);
-                    $authorName = "{$author[0]['author_first_name']} {$author[0]['author_last_name']}";
-                    $publication_date = $book->publication_date;
-                    return "{$authorName}  •  {$publication_date}";
-                }),
+                    ->collapsible()
+                    ->label('Book')
+                    ->getTitleFromRecordUsing(function (Rating $record) {
+                        $book = Book::find($record->book_id);
+                        return $book->book_name;
+                    })
+                    ->getDescriptionFromRecordUsing(function (Rating $record) {
+                        $book = Book::find($record->book_id);
+                        $author = Author::whereRelation(
+                            'books',
+                            'author_id',
+                            $book->author_id
+                        )->get(['author_first_name', 'author_last_name']);
+                        $authorName = "{$author[0]['author_first_name']} {$author[0]['author_last_name']}";
+                        $publication_date = $book->publication_date;
+                        return "{$authorName}  •  {$publication_date}";
+                    }),
             ])
 
             ->columns([
-
                 Tables\Columns\TextColumn::make('book_id')
                     ->label('Book')
                     ->formatStateUsing(function ($state) {
@@ -93,23 +94,15 @@ class RatingResource extends Resource
                     ->alignment(Alignment::End)
 
                     ->sortable(),
-                Tables\Columns\TextColumn::make('rating_score')
-                    ->badge()
-                    ->color('warning')
-                    ->formatStateUsing(fn ($state) => "{$state}/5")
-                    ->summarize(Average::make()),
+                RatingColumn::make('rating_score')->summarize(Average::make()),
                 Tables\Columns\TextColumn::make('created_at')
-                ->date()
-                ->since(),
-
-
-
+                    ->date()
+                    ->since(),
             ])
             ->filters([
                 //
             ])
-            ->actions([
-            ])
+            ->actions([])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
@@ -120,8 +113,8 @@ class RatingResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
-        ];
+                //
+            ];
     }
 
     public static function getPages(): array

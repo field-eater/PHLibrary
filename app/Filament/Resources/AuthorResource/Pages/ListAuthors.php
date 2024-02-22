@@ -13,7 +13,9 @@ class ListAuthors extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make()->outlined(),
+            Actions\CreateAction::make()
+                ->outlined()
+                ->icon('heroicon-c-pencil'),
         ];
     }
 }

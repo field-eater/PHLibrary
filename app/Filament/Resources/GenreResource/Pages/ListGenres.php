@@ -13,7 +13,10 @@ class ListGenres extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make()->modalWidth('md')->outlined(),
+            Actions\CreateAction::make()
+                ->modalWidth('md')
+                ->outlined()
+                ->icon('heroicon-o-rectangle-stack'),
         ];
     }
 }

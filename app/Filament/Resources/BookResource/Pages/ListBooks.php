@@ -13,7 +13,9 @@ class ListBooks extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make()->outlined(),
+            Actions\CreateAction::make()
+            ->icon('heroicon-m-book-open')
+            ->outlined(),
         ];
     }
 }

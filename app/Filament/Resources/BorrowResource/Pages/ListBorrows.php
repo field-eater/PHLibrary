@@ -16,24 +16,42 @@ class ListBorrows extends ListRecords
     public function getTabs(): array
     {
         return [
-            'all' => Tab::make()
-                    ->icon('heroicon-o-bookmark-square'),
+            'all' => Tab::make()->icon('heroicon-o-bookmark-square'),
             'pending' => Tab::make()
                 ->icon('heroicon-o-arrow-path')
-                ->badge(Borrow::query()->where('return_status', 'pending')->count())
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('return_status', 'pending')),
+                ->badge(
+                    Borrow::query()
+                        ->where('return_status', 'pending')
+                        ->count()
+                )
+                ->modifyQueryUsing(
+                    fn(Builder $query) => $query->where(
+                        'return_status',
+                        'pending'
+                    )
+                ),
             'returned' => Tab::make()
                 ->icon('heroicon-m-arrows-pointing-in')
-                ->badge(Borrow::query()->where('return_status', 'returned')->count())
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('return_status', 'returned')),
+                ->badge(
+                    Borrow::query()
+                        ->where('return_status', 'returned')
+                        ->count()
+                )
+                ->modifyQueryUsing(
+                    fn(Builder $query) => $query->where(
+                        'return_status',
+                        'returned'
+                    )
+                ),
         ];
     }
 
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make()->outlined()
-            ,
+            Actions\CreateAction::make()
+                ->outlined()
+                ->icon('heroicon-c-hand-raised'),
         ];
     }
 }

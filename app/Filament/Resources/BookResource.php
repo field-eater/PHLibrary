@@ -5,8 +5,6 @@ namespace App\Filament\Resources;
 use App\Enums\BookCopyStatusEnum;
 use App\Enums\BorrowStatusEnum;
 use App\Filament\Resources\BookResource\Pages;
-use App\Filament\Resources\BookResource\RelationManagers;
-use App\Filament\Resources\BookResource\RelationManagers\BorrowsRelationManager;
 use App\Filament\Resources\BookResource\RelationManagers\RatingsRelationManager;
 use App\Livewire\RecentBorrows;
 use App\Models\Author;
@@ -16,37 +14,27 @@ use App\Models\Borrow;
 use App\Models\Genre;
 use App\Models\Rating;
 use App\Models\Student;
-use App\Models\User;
-use Carbon\Carbon;
 use Filament\Forms;
-use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Grid as FormGrid;
+use Filament\Forms\Components\Section as FormSection;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Actions as InfoActions;
 use Filament\Infolists\Components\Actions\Action as InfoAction;
-
 use Filament\Infolists\Components\Grid as InfoGrid;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\Livewire;
-use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\Split as InfoSplit;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\TextEntry\TextEntrySize;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
-use Filament\Support\Enums\FontWeight;
-use Filament\Support\Enums\IconPosition;
 use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
 use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Table;
-use IbrahimBougaoua\FilamentRatingStar\Actions\RatingStar;
-use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
 use Yepsua\Filament\Forms\Components\Rating as RatingForm;
 
@@ -63,53 +51,97 @@ class BookResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\FileUpload::make('book_image')
-                ->image(),
-                Forms\Components\Select::make('author_id')
-                    ->relationship('author', 'author_first_name')
-                    ->getOptionLabelFromRecordUsing(fn (Author $record) => "{$record->author_first_name} {$record->author_last_name}")
-                    ->preload()
-                    ->searchable(['author_first_name', 'author_last_name'])
-                    ->required(),
-                Forms\Components\Select::make('book_genre')
-                ->multiple()
-                ->preload()
-                ->relationship('genres', 'genre_title')
-                ->getOptionLabelFromRecordUsing(fn (Genre $record) => "{$record->genre_title}")
-                ->createOptionForm([
-                    Forms\Components\TextInput::make('genre_title')
+                FormGrid::make(4)
+                ->schema([
+                    FormSection::make()
+                    ->schema([
+                        // TODO: Modify Image resolution to fit book image standardization requirements
+                        Forms\Components\FileUpload::make('book_image')
+                        ->image()
+                        ->columnSpan(1),
+                        FormGrid::make(6)
+                        ->schema([
+                            Forms\Components\TextInput::make('book_name')
+                        ->required()
+                        ->maxLength(255)
+                        ->columnSpan(6),
+                        Forms\Components\Select::make('publication_date')
+                            ->options(function ()
+                            {
+                                $years = range(date('Y') - 300, date('Y'));
+
+                                // Create an array with years as keys and formatted date strings as values
+                                $yearsWithDates = array_combine($years, array_map(function ($year) {
+                                    return substr(date('Y-m-d', strtotime($year . '-01-01')), 0, -6);
+                                }, $years));
+
+                                return array_reverse($yearsWithDates, true);
+                            })
+                            ->searchable()
+                            ->required()
+                            ->columnSpan(3),
+                        Forms\Components\Select::make('author_id')
+                        ->relationship('author', 'author_first_name')
+                        ->getOptionLabelFromRecordUsing(fn (Author $record) => "{$record->author_first_name} {$record->author_last_name}")
+                        ->preload()
+                        ->searchable(['author_first_name', 'author_last_name'])
+                        ->columnSpan(3)
                         ->required(),
-                    Forms\Components\Textarea::make('genre_description')
+
+                        Forms\Components\Textarea::make('book_details')
+                        ->required()
                         ->maxLength(65535)
-                        ->required(),
-                ]),
-                Forms\Components\TextInput::make('property_id')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('book_name')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\Select::make('publication_date')
-                    ->options(function ()
-                    {
-                        $years = range(date('Y') - 300, date('Y'));
+                        ->rows(3)
+                        ->columnSpanFull(),
+                        ])
+                        ->columnSpan(2),
+                        Forms\Components\Select::make('book_genre')
+                        ->multiple()
+                        ->preload()
+                        ->required()
+                        ->columnSpan(3)
+                        ->relationship('genres', 'genre_title')
+                        ->getOptionLabelFromRecordUsing(fn (Genre $record) => "{$record->genre_title}")
+                        ->createOptionForm([
+                            Forms\Components\TextInput::make('genre_title')
+                                ->required(),
+                            Forms\Components\Textarea::make('genre_description')
+                                ->maxLength(65535)
+                                ->required(),
+                        ]),
+                    ])
+                    ->columnSpan(3)
+                    ->columns(3),
+                    FormGrid::make(1)
+                    ->schema([
+                        FormSection::make()
+                        ->schema([
 
-                        // Create an array with years as keys and formatted date strings as values
-                        $yearsWithDates = array_combine($years, array_map(function ($year) {
-                            return substr(date('Y-m-d', strtotime($year . '-01-01')), 0, -6);
-                        }, $years));
+                            Forms\Components\TextInput::make('property_id')
+                            ->required()
+                            ->maxLength(255)
+                            ->columnSpan(1),
 
-                        return array_reverse($yearsWithDates, true);
-                    })
-                    ->searchable()
-                    ->required(),
-                Forms\Components\Textarea::make('book_details')
-                    ->required()
-                    ->maxLength(65535)
-                    ->columnSpanFull(),
-                Forms\Components\TextInput::make('available_copies')
-                    ->required()
-                    ->numeric(),
+                        Forms\Components\TextInput::make('available_copies')
+                            ->required()
+                            ->numeric(),
+                        ])
+                        ->columnSpan(1),
+
+
+
+                    ])
+                    ->columnSpan(1),
+
+
+
+
+                ])
+
+
+
+
+
             ]);
     }
 

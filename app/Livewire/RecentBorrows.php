@@ -27,18 +27,10 @@ use Livewire\Component;
 
 class RecentBorrows extends Component implements HasTable, HasForms
 {
-
     use InteractsWithTable;
     use InteractsWithForms;
 
-
     public Model $record;
-
-
-
-
-
-
 
     // protected function paginateTableQuery(Builder $query): CursorPaginator
     // {
@@ -46,23 +38,35 @@ class RecentBorrows extends Component implements HasTable, HasForms
     // }
     public function table(Table $table): Table
     {
-
-
         return $table
             ->heading('Latest Borrows')
             // ->defaultPaginationPageOption(1)
             ->paginated(false)
             ->emptyStateHeading('No borrows yet')
-            ->query(Borrow::query()->whereBelongsTo($this->record)->where('return_status', BorrowStatusEnum::Pending)->limit(2)->orderBy('date_borrowed', 'desc'))
+            ->query(
+                Borrow::query()
+                    ->whereBelongsTo($this->record)
+                    ->where('return_status', BorrowStatusEnum::Pending)
+                    ->limit(2)
+                    ->orderBy('date_borrowed', 'desc')
+            )
             ->columns([
                 Split::make([
-
                     Stack::make([
                         TextColumn::make('student_id')
-                            ->formatStateUsing(function (Student $student, $state)
-                            {
-                                $studentId = $student->find($state)->pluck('user_id');
-                                $borrowingUserName = User::find($studentId)->value('first_name').' '.User::find($studentId)->value('last_name');
+                            ->formatStateUsing(function (
+                                Student $student,
+                                $state
+                            ) {
+                                $studentId = $student
+                                    ->find($state)
+                                    ->pluck('user_id');
+                                $borrowingUserName =
+                                    User::find($studentId)->value(
+                                        'first_name'
+                                    ) .
+                                    ' ' .
+                                    User::find($studentId)->value('last_name');
                                 return $borrowingUserName;
                             })
                             ->label('')
@@ -77,19 +81,15 @@ class RecentBorrows extends Component implements HasTable, HasForms
                     ]),
                     Stack::make([
                         TextColumn::make('return_status')
-                        ->label('')
-                        ->size(TextColumn\TextColumnSize::Medium)
-                        ->badge(),
+                            ->label('')
+                            ->size(TextColumn\TextColumnSize::Medium)
+                            ->badge(),
                         TextColumn::make('estimated_return_date')
-                        ->label('Estimated Return Date')
-                        ->size(TextColumn\TextColumnSize::ExtraSmall)
-                        ->date(),
-
-                    ])
-                    ->alignment(Alignment::End),
-
-
-                ])
+                            ->label('Estimated Return Date')
+                            ->size(TextColumn\TextColumnSize::ExtraSmall)
+                            ->date(),
+                    ])->alignment(Alignment::End),
+                ]),
             ])
             ->filters([
                 // ...
@@ -108,14 +108,8 @@ class RecentBorrows extends Component implements HasTable, HasForms
     //     $this->record = $record;
     // }
 
-
-
-
-
     public function render(): View
     {
         return view('livewire.recent-borrows');
     }
-
-
 }

@@ -20,9 +20,11 @@ class ViewAuthor extends ViewRecord
     {
         return [
             Actions\EditAction::make()
-            ->color('warning')
-            ->outlined()
-            ->icon('heroicon-o-pencil-square'),
+                ->color('warning')
+                ->modalWidth('lg')
+                ->slideOver()
+                ->outlined()
+                ->icon('heroicon-o-pencil-square'),
         ];
     }
 }

@@ -43,47 +43,51 @@ class BorrowResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-queue-list';
     protected static ?string $navigationGroup = 'Book Management';
 
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
 
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                //
-               Grid::make(1)
-               ->schema([
-                    Select::make('student_id')
+        return $form->schema([
+            //
+            Grid::make(1)->schema([
+                Select::make('student_id')
                     ->options(Student::all()->pluck('student_number', 'id'))
-                    ->getOptionLabelFromRecordUsing(fn (Model $record): string => Book::find($record->book_id)->book_name)
+                    ->getOptionLabelFromRecordUsing(
+                        fn(Model $record): string => Book::find(
+                            $record->book_id
+                        )->book_name
+                    )
                     ->required(),
-                    Select::make('book_copy_id')
+                Select::make('book_copy_id')
                     ->label('Book')
                     ->preload()
                     ->options(Book::all()->pluck('book_name', 'id'))
                     ->searchable()
-                    ->disableOptionWhen(function (string $value):bool
-                    {
-                        $copy = BookCopy::where('book_id', $value)->where('status', BookCopyStatusEnum::Available)->count();
-                        if ($copy > 0)
-                        {
+                    ->disableOptionWhen(function (string $value): bool {
+                        $copy = BookCopy::where('book_id', $value)
+                            ->where('status', BookCopyStatusEnum::Available)
+                            ->count();
+                        if ($copy > 0) {
                             return false;
                         }
                         return true;
                     })
                     ->required(),
-                    // ->live()
-                    // ->afterStateUpdated(function (?string $state, ?string $old, Set $set) {
-                    //     // ...
-                    //     $set('book_id', $state);
-                    // }),
-                    // TextInput::make('book_id'),
-                    // // TODO: Ilipat sa lifecycle ng borrows
+                // ->live()
+                // ->afterStateUpdated(function (?string $state, ?string $old, Set $set) {
+                //     // ...
+                //     $set('book_id', $state);
+                // }),
+                // TextInput::make('book_id'),
+                // // TODO: Ilipat sa lifecycle ng borrows
 
-                    DatePicker::make('date_borrowed')
-                    ->required(),
-                    DatePicker::make('estimated_return_date')
-                    ->required(),
-               ])
-            ]);
+                DatePicker::make('date_borrowed')->required(),
+                DatePicker::make('estimated_return_date')->required(),
+            ]),
+        ]);
     }
 
     public static function table(Table $table): Table
@@ -91,79 +95,74 @@ class BorrowResource extends Resource
         return $table
             ->columns([
                 //
-                TextColumn::make('student_id')
-                ->label('Student Name')
-                ->formatStateUsing(function (User $user, $state)
-                {
-                    $student = Student::find($state);
-                    $user = $user->find($student->user_id);
-                    return "{$user->first_name} {$user->last_name}";
-                }),
-                TextColumn::make('book_copy_id')
-                ->description(fn ($state) => implode(BookCopy::where('id',$state)->pluck('copy_id')->toArray()))
-                ->formatStateUsing(function ($state)
-                {
-                    $copy = BookCopy::find($state)->first();
-                    $bookName = Book::where('id', $copy->book_id)->first();
-                    return $bookName->book_name;
-                })
-                ->badge()
+                TextColumn::make('student.student_number')
+                    ->searchable()
+                    ->label('Student Number'),
+                TextColumn::make('book.book_name')
+                    ->searchable()
+                    ->description(
+                        fn($record) => implode(
+                            BookCopy::where('id', $record->book_copy_id)
+                                ->pluck('copy_id')
+                                ->toArray()
+                        )
+                    )
+                    ->badge()
 
-                ->label('Borrowed Book'),
-
-
+                    ->label('Borrowed Book'),
 
                 // ->hiddenOn(BorrowsRelationManager::class),
                 TextColumn::make('date_borrowed')
-                ->label('Issued Date')
-                ->sortable()
-                ->date(),
+                    ->label('Issued Date')
+                    ->sortable()
+                    ->date(),
                 TextColumn::make('estimated_return_date')
-                ->label('Estimated Return Date')
-                ->default('')
-                // ->hiddenOn(BorrowsRelationManager::class)
-                ->date(),
+                    ->label('Estimated Return Date')
+                    ->default('')
+                    // ->hiddenOn(BorrowsRelationManager::class)
+                    ->date(),
                 TextColumn::make('date_returned')
-                ->label('Actual Return Date')
-                ->default('')
-                // ->hiddenOn(BorrowsRelationManager::class)
-                ->date(),
+                    ->label('Actual Return Date')
+                    ->default('')
+                    // ->hiddenOn(BorrowsRelationManager::class)
+                    ->date(),
                 TextColumn::make('return_status')
-                ->label('Status')
-                ->badge(),
+                    ->label('Status')
+                    ->badge(),
                 TextColumn::make('remarks')
-                ->label('Remarks')
-                ->wrap()
-
+                    ->label('Remarks')
+                    ->wrap(),
             ])
             ->filters([
                 //
             ])
             ->actions([
                 Tables\Actions\Action::make('return')
-                ->icon('heroicon-o-hand-raised')
-                ->visible(fn ($record) => $record->date_returned == NULL)
-                ->form([
-                    DatePicker::make('date_returned'),
-                    Textarea::make('remarks'),
-                ])
-                ->modalWidth('sm')
-                ->action(function ($record, Array $data) {
-                    $record->date_returned = $data['date_returned'];
-                    $record->remarks = $data['remarks'];
-                    $record->return_status = BorrowStatusEnum::Returned;
-                    $record->save();
+                    ->icon('heroicon-o-arrow-uturn-right')
+                    ->visible(fn($record) => $record->date_returned == null)
+                    ->form([
+                        DatePicker::make('date_returned'),
+                        Textarea::make('remarks'),
+                    ])
+                    ->modalWidth('sm')
+                    ->action(function ($record, array $data) {
+                        $record->date_returned = $data['date_returned'];
+                        $record->remarks = $data['remarks'];
+                        $record->return_status = BorrowStatusEnum::Returned;
+                        $record->save();
 
-                    $bookCopy = BookCopy::where('id', $record->book_copy_id)->first();
-                    $bookCopy->status = BookCopyStatusEnum::Available;
-                    $bookCopy->save();
+                        $bookCopy = BookCopy::where(
+                            'id',
+                            $record->book_copy_id
+                        )->first();
+                        $bookCopy->status = BookCopyStatusEnum::Available;
+                        $bookCopy->save();
 
-                    Notification::make()
-                        ->title('Saved successfully')
-                        ->success()
-                        ->send();
-                }),
-
+                        Notification::make()
+                            ->title('Saved successfully')
+                            ->success()
+                            ->send();
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -175,8 +174,8 @@ class BorrowResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
-        ];
+                //
+            ];
     }
 
     public static function getPages(): array
