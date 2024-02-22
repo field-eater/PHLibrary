@@ -40,16 +40,13 @@ class ViewBook extends ViewRecord
                 ->action(
                     function ($record, array $data)
                     {
-                        $bookCopy =  BookCopy::where('book_id', $record->id)->get();
-                        // dd($bookCopy);
-
-                        foreach($bookCopy as $copy)
+                        $bookCopies =  BookCopy::whereBelongsTo($record)->get();
+                        foreach($bookCopies as $copy)
                         {
                             if ($copy->status == BookCopyStatusEnum::Available)
                             {
                                 $copy->status = BookCopyStatusEnum::Unavailable;
                                 $copy->save();
-
                                 Borrow::create([
                                     'student_id' => $data['student_id'],
                                     'date_borrowed' => $data['date_borrowed'],

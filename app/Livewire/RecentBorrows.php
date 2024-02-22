@@ -49,11 +49,11 @@ class RecentBorrows extends Component implements HasTable, HasForms
 
 
         return $table
-            ->heading('Latest Borrow')
+            ->heading('Latest Borrows')
             // ->defaultPaginationPageOption(1)
             ->paginated(false)
             ->emptyStateHeading('No borrows yet')
-            ->query(Borrow::query()->whereBelongsTo($this->record)->where('return_status', BorrowStatusEnum::Pending)->limit(1)->orderBy('date_borrowed', 'desc'))
+            ->query(Borrow::query()->whereBelongsTo($this->record)->where('return_status', BorrowStatusEnum::Pending)->limit(2)->orderBy('date_borrowed', 'desc'))
             ->columns([
                 Split::make([
 
@@ -70,6 +70,7 @@ class RecentBorrows extends Component implements HasTable, HasForms
                             ->columnSpan(2),
                         TextColumn::make('date_borrowed')
                             ->size(TextColumn\TextColumnSize::ExtraSmall)
+                            ->color('gray')
                             ->since()
                             ->weight('thin')
                             ->label(''),

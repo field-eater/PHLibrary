@@ -48,6 +48,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
+use Yepsua\Filament\Forms\Components\Rating as RatingForm;
 
 class BookResource extends Resource
 {
@@ -148,9 +149,10 @@ class BookResource extends Resource
                                         ->columnSpan(2),
                                     TextEntry::make('rating')
                                         ->color('gray')
+                                        ->weight('bold')
                                         ->formatStateUsing(function ($record) {
-                                           $rating = Rating::where('book_id', $record->id)->avg('rating_score');
-                                           $numberOfRaters = Rating::where('book_id', $record->id)->count();
+                                           $rating = Rating::whereBelongsTo($record)->avg('rating_score');
+                                           $numberOfRaters = Rating::whereBelongsTo($record)->count();
                                            $roundedRating = round($rating, 2);
                                            if ($rating)
                                            {
@@ -168,7 +170,7 @@ class BookResource extends Resource
                                         ->link()
                                         ->modalWidth(MaxWidth::Small)
                                         ->form([
-                                            RatingStar::make('rating_score')
+                                            RatingForm::make('rating_score')
                                             ->required()
 
                                             ->label('Rating'),
@@ -223,7 +225,7 @@ class BookResource extends Resource
                         Section::make('')
                             ->schema([
                                 TextEntry::make('created_at')
-                                ->since()
+                                ->date()
                                 ->color('gray')
                                 ->badge(),
                                 TextEntry::make('updated_at')
@@ -267,31 +269,24 @@ class BookResource extends Resource
                         } )
                         ->searchable(),
 
-                    Tables\Columns\TextColumn::make('rating')
+                    Tables\Columns\TextColumn::make('ratings_avg_rating_score')
+                        ->avg('ratings', 'rating_score')
                         ->icon('heroicon-m-star')
                         ->color('warning')
+                        ->placeholder('Not Rated')
+                        ->formatStateUsing(fn ($state) => round($state, 2))
                         ->iconPosition('after')
-                        ->formatStateUsing(function ($record) {
-                            $rating = Rating::where('book_id', $record->id)->avg('rating_score');
-                            $roundedRating = round($rating, 2);
-                            if ($rating)
-                            {
-                                 return $roundedRating;
-                            }
-                            return 'Not Rated';
-
-                         })
+                        ->label('Rating')
                         ->sortable(),
                     ]),
-                    Tables\Columns\TextColumn::make('available_copies')
-                    ->color(fn ($record) => BookCopy::where('book_id', $record->id)->where('status', BookCopyStatusEnum::Available)->count() !== 0 ? 'gray' : 'danger')
+                    Tables\Columns\TextColumn::make('bookcopies_count')
+                    ->counts([
+                        'bookcopies' => fn (Builder $query) => $query->where('status', BookCopyStatusEnum::Available)
+                    ])
+                    ->color(fn ($record) => BookCopy::whereBelongsTo($record)->where('status', BookCopyStatusEnum::Available)->count() !== 0 ? 'gray' : 'danger')
                     ->badge()
                     ->description('Copies', position: 'above')
-                    ->formatStateUsing(function ($record)
-                    {
-                        $copy = BookCopy::where('book_id', $record->id)->where('status', BookCopyStatusEnum::Available)->count();
-                        return ($copy !== 0) ? "{$copy}/{$record->available_copies}": BookCopyStatusEnum::Unavailable;
-                    })
+                    ->formatStateUsing(fn ($state, $record) => ($state > 0) ? "{$state}/{$record->available_copies}" : BookCopyStatusEnum::Unavailable)
                     ->alignment('right'),
                ])
             ])
@@ -304,17 +299,39 @@ class BookResource extends Resource
                 Tables\Actions\Action::make('Borrow')
                 ->icon('heroicon-m-hand-raised')
                 ->requiresConfirmation()
-                // ->form([
-                //     Forms\Components\DatePicker::make('date_borrowed')
-                //     ->label('Borrow Date')
-                //     ->after('tomorrow')
-                //     ->required(),
-                // ])
-                ->visible(fn ($record): bool => (BookCopy::where('book_id', $record->id)->where('status', BookCopyStatusEnum::Available)->count() > 0) ? true : false)
+                ->form([
+                    Forms\Components\DatePicker::make('date_borrowed')
+                    ->label('Borrow Date')
+                    ->after('tomorrow')
+                    ->required(),
+                ])
+                ->visible(fn ($record): bool => (BookCopy::whereBelongsTo($record)->where('status', BookCopyStatusEnum::Available)->count() > 0) ? true : false)
+                ->hidden(fn () => Auth::user()->is_admin > 0)
                 ->action(
-                    function ($record) {
-                        $record->available_copies = $record->available_copies - 1;
-                        $record->save();
+                    function ($record, array $data)
+                    {
+
+                        $student = Student::whereBelongsTo(Auth::user());
+                        $bookCopies =  BookCopy::whereBelongsTo($record)->get();
+                        foreach($bookCopies as $copy)
+                        {
+                            if ($copy->status == BookCopyStatusEnum::Available)
+                            {
+                                $copy->status = BookCopyStatusEnum::Unavailable;
+                                $copy->save();
+                                Borrow::create([
+                                    'student_id' => $student->id,
+                                    'date_borrowed' => $data['date_borrowed'],
+                                    'book_id' => $record->id,
+                                    'book_copy_id' => $copy->id,
+                                    'return_status' => BorrowStatusEnum::Pending,
+
+                                ]);
+                                return $data;
+                            }
+                        }
+
+
                     }
                 ),
             ])

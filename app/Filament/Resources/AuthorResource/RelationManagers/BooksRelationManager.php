@@ -4,6 +4,7 @@ namespace App\Filament\Resources\AuthorResource\RelationManagers;
 
 use App\Models\Author;
 use App\Models\Book;
+use App\Models\Rating;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -48,10 +49,19 @@ class BooksRelationManager extends RelationManager
                         ->weight('bold')
                         ->searchable(),
                     Tables\Columns\TextColumn::make('rating')
+                        ->formatStateUsing(function ($record) {
+                            $rating = Rating::where('book_id', $record->id)->avg('rating_score');
+                            $roundedRating = round($rating, 2);
+                            if ($rating)
+                            {
+                                return $roundedRating;
+                            }
+                            return 'Not Rated';
+
+                        })
                         ->icon('heroicon-m-star')
                         ->color('warning')
                         ->iconPosition('after')
-                        ->numeric()
                         ->default('Not Rated')
                         ->sortable(),
                     ]),

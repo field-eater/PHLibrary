@@ -8,6 +8,7 @@ use App\Filament\Resources\GenreResource\RelationManagers\BooksRelationManager;
 use App\Models\Genre;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\Grid;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
@@ -47,12 +48,28 @@ class GenreResource extends Resource
     {
         return $infolist
         ->schema([
-            Section::make(fn ($record) => $record->genre_title)
+            Grid::make(4)
                 ->schema([
-                    TextEntry::make('genre_description')
-                    ->label('')
-                    ->prose(),
-            ])
+                    Section::make(fn ($record) => $record->genre_title)
+                    ->schema([
+                        TextEntry::make('genre_description')
+                        ->label('')
+                        ->prose(),
+                    ])
+                    ->columnSpan(3),
+                    Section::make('')
+                    ->schema([
+                        TextEntry::make('created_at')
+                        ->color('gray')
+                        ->badge()
+                        ->date(),
+                        TextEntry::make('updated_at')
+                        ->color('gray')
+                        ->badge()
+                        ->since(),
+                    ])
+                    ->columnSpan(1)
+                ])
         ]);
     }
 

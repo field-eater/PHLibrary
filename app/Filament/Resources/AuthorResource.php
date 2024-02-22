@@ -91,8 +91,12 @@ class AuthorResource extends Resource
                         ->prose(),
                         Split::make([
                             TextEntry::make('created_at')
-                                ->since(),
+                                ->badge()
+                                ->color('gray')
+                                ->date(),
                             TextEntry::make('updated_at')
+                                ->badge()
+                                ->color('gray')
                                 ->since(),
                         ]),
                       ]),

@@ -60,6 +60,7 @@ class RatingResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query) => $query->orderBy('created_at', 'desc'))
             ->groups([
                 Group::make('book_id')
                 ->collapsible()
@@ -87,7 +88,7 @@ class RatingResource extends Resource
                         return $book->book_name;
                     })
                     ->sortable(),
-                Tables\Columns\TextColumn::make('user_id')
+                Tables\Columns\TextColumn::make('user.user_name')
                     ->label('User Name')
                     ->alignment(Alignment::End)
 
@@ -97,7 +98,9 @@ class RatingResource extends Resource
                     ->color('warning')
                     ->formatStateUsing(fn ($state) => "{$state}/5")
                     ->summarize(Average::make()),
-                Tables\Columns\TextColumn::make('created_at'),
+                Tables\Columns\TextColumn::make('created_at')
+                ->date()
+                ->since(),
 
 
 
