@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable implements FilamentUser, HasName, HasAvatar
+class User extends Authenticatable implements FilamentUser, HasName, HasAvatar, MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -25,11 +25,13 @@ class User extends Authenticatable implements FilamentUser, HasName, HasAvatar
      *
      */
     protected $fillable = [
+        'avatar',
         'user_name',
         'first_name',
         'last_name',
         'email',
         'is_admin',
+        'is_activated',
         'password',
     ];
 
@@ -43,9 +45,26 @@ class User extends Authenticatable implements FilamentUser, HasName, HasAvatar
         'remember_token',
     ];
 
+    public function isActive()
+    {
+        return $this->is_activated;
+    }
+
+    // Scopes for filtering users by activation status
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_activated', true);
+    }
+
+    public function scopeInactive($query)
+    {
+        return $query->where('is_activated', false);
+    }
+
     public function getFilamentAvatarUrl(): ?string
     {
-        return $this->avatar_url;
+        return $this->avatar;
     }
 
     public function student(): HasOne
@@ -69,10 +88,11 @@ class User extends Authenticatable implements FilamentUser, HasName, HasAvatar
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'is_activated' => 'boolean',
     ];
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return str_ends_with($this->email, '@gmail.com');
+        return str_ends_with($this->email, '@gmail.com') && $this->is_activated == True;
     }
 }

@@ -10,6 +10,12 @@ class ListStudents extends ListRecords
 {
     protected static string $resource = StudentResource::class;
 
+    protected function getHeaderWidgets(): array
+    {
+        return [StudentResource\Widgets\StudentStatWidget::class];
+    }
+
+
     protected function getHeaderActions(): array
     {
         return [

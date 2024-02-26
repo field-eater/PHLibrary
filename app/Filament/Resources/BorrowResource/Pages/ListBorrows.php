@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\BorrowResource\Pages;
 
 use App\Filament\Resources\BorrowResource;
+use App\Filament\Resources\BorrowResource\Widgets\BorrowStatsWidget;
 use App\Models\Borrow;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
@@ -12,7 +13,12 @@ use Illuminate\Database\Eloquent\Builder;
 class ListBorrows extends ListRecords
 {
     protected static string $resource = BorrowResource::class;
-
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            BorrowStatsWidget::class,
+        ];
+    }
     public function getTabs(): array
     {
         return [

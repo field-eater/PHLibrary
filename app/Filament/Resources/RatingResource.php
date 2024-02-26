@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\RatingResource\Pages;
 use App\Filament\Resources\RatingResource\RelationManagers;
+use App\Filament\Resources\RatingsResource\Widgets\RatingStatsWidget;
 use App\Models\Author;
 use App\Models\Book;
 use App\Models\Rating;
@@ -19,9 +20,10 @@ use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\Summarizers\Average;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
-use IbrahimBougaoua\FilamentRatingStar\Actions\RatingStar;
+
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Yepsua\Filament\Forms\Components\Rating as RatingStar;
 use Yepsua\Filament\Tables\Components\RatingColumn;
 
 class RatingResource extends Resource
@@ -115,6 +117,13 @@ class RatingResource extends Resource
         return [
                 //
             ];
+    }
+
+    public static function getWidgets(): array
+    {
+        return [
+            RatingStatsWidget::class,
+        ];
     }
 
     public static function getPages(): array

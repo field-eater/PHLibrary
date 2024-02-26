@@ -7,6 +7,7 @@ use App\Enums\BorrowStatusEnum;
 use App\Filament\Resources\BookResource\RelationManagers\BorrowsRelationManager;
 use App\Filament\Resources\BorrowResource\Pages;
 use App\Filament\Resources\BorrowResource\RelationManagers;
+use App\Filament\Resources\BorrowResource\Widgets\BorrowStatsWidget;
 use App\Models\Book;
 use App\Models\BookCopy;
 use App\Models\Borrow;
@@ -176,6 +177,13 @@ class BorrowResource extends Resource
         return [
                 //
             ];
+    }
+
+    public static function getWidgets(): array
+    {
+        return [
+            BorrowStatsWidget::class
+        ];
     }
 
     public static function getPages(): array

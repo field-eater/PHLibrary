@@ -2,6 +2,8 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\User;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Wizard;
 use Filament\Pages\Page;
@@ -18,15 +20,21 @@ class Register extends BaseRegister
                 Wizard::make([
 
                     Wizard\Step::make('Names')
-                    ->description('Set up your account name and your real name')
+                    ->description('Set up your user name')
                     ->schema([
+                        FileUpload::make('avatar')
+                        ->avatar()
+                        ->image()
+                        ->imageEditor(),
                         TextInput::make('user_name')
-                        ->maxLength('12')
-                        ->unique()
+                        ->maxLength('16')
+                        ->unique(table: User::class ,column: 'user_name')
                         ->required(),
                         TextInput::make('first_name')
+                        ->alpha()
                         ->required(),
                         TextInput::make('last_name')
+                        ->alpha()
                         ->required(),
                     ]),
                     Wizard\Step::make('Account')

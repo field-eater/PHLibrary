@@ -29,14 +29,24 @@ class BookCopy extends Model
         return $this->HasMany(Borrow::class);
     }
 
-    // protected static function boot()
-    // {
-    //     parent::boot();
+    protected static function boot()
+    {
+        parent::boot();
 
-    //     static::creating(function ($bookCopy,) {
-    //         $bookCopy->copy_id = (string) \Illuminate\Support\Str::uuid();
-    //     });
-    // }
+        static::creating(function ($bookCopy,) {
+            $bookCopy->book->touch();
+        });
+
+        static::updating(function ($bookCopy) {
+            // Trigger the 'updating' event on the parent Books model
+            $bookCopy->book->touch();
+        });
+
+        static::deleting(function ($bookCopy) {
+            // Trigger the 'deleting' event on the parent Books model
+            $bookCopy->book->touch();
+        });
+    }
 
     protected $casts =
     [

@@ -6,6 +6,7 @@ use App\Enums\BookCopyStatusEnum;
 use App\Enums\BorrowStatusEnum;
 use App\Filament\Resources\BookResource\Pages;
 use App\Filament\Resources\BookResource\RelationManagers\RatingsRelationManager;
+use App\Filament\Resources\BookResource\Widgets\BookStatsWidget;
 use App\Livewire\RecentBorrows;
 use App\Models\Author;
 use App\Models\Book;
@@ -377,6 +378,13 @@ class BookResource extends Resource
         return [
             //
              RatingsRelationManager::class,
+        ];
+    }
+
+    public static function getWidgets(): array
+    {
+        return [
+            BookStatsWidget::class
         ];
     }
 

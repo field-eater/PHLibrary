@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\StudentResource\Pages;
 use App\Filament\Resources\StudentResource\RelationManagers;
+
 use App\Models\Student;
 use Filament\Forms;
 use Filament\Forms\Components\Grid;
@@ -18,6 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class StudentResource extends Resource
 {
     protected static ?string $model = Student::class;
+
 
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
 
@@ -104,6 +106,13 @@ class StudentResource extends Resource
     {
         return [
             //
+        ];
+    }
+
+    public static function getWidgets(): array
+    {
+        return [
+            StudentResource\Widgets\StudentStatWidget::class
         ];
     }
 

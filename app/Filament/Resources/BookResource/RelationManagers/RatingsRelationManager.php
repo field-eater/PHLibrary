@@ -48,11 +48,17 @@ class RatingsRelationManager extends RelationManager
             ->columns([
                 Stack::make([
                     Split::make([
-                        // TODO: create an avatar column once avatar image is added to database
 
+                        Tables\Columns\ImageColumn::make('user.avatar')
+                            ->size(50)
+                            ->circular()
+                            ->grow(false)
+                            // ->defaultImageUrl(url())
+                            ,
                         Tables\Columns\TextColumn::make('user.user_name')
                             ->searchable()
                             ->label('name')
+                            ->badge()
                             ->grow(false),
 
                         Tables\Columns\TextColumn::make('created_at')
