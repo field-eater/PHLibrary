@@ -37,7 +37,7 @@ use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
-use Yepsua\Filament\Forms\Components\Rating as RatingForm;
+use Yepsua\Filament\Forms\Components\Rating as RatingField;
 
 class BookResource extends Resource
 {
@@ -203,7 +203,7 @@ class BookResource extends Resource
                                         ->link()
                                         ->modalWidth(MaxWidth::Small)
                                         ->form([
-                                            RatingForm::make('rating_score')
+                                            RatingField::make('rating_score')
                                             ->required()
 
                                             ->label('Rating'),

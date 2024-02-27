@@ -10,6 +10,7 @@ enum BorrowStatusEnum: string implements HasLabel, HasColor, HasIcon
 {
     case Pending = 'pending';
     case Returned = 'returned';
+    case Borrowed = 'borrowed';
 
     public function getLabel(): ?string
     {
@@ -17,6 +18,7 @@ enum BorrowStatusEnum: string implements HasLabel, HasColor, HasIcon
         return match ($this) {
             self::Pending => 'Pending',
             self::Returned => 'Returned',
+            self::Borrowed => 'Borrowed',
 
         };
     }
@@ -26,6 +28,7 @@ enum BorrowStatusEnum: string implements HasLabel, HasColor, HasIcon
         return match ($this) {
             self::Pending => 'gray',
             self::Returned => 'success',
+            self::Borrowed => 'primary',
 
         };
     }
@@ -35,6 +38,8 @@ enum BorrowStatusEnum: string implements HasLabel, HasColor, HasIcon
         return match ($this) {
             self::Pending => 'heroicon-c-clock',
             self::Returned => 'heroicon-c-check-badge',
+            self::Borrowed => 'heroicon-c-hand-open',
+
 
         };
     }

@@ -52,8 +52,13 @@ class RecentBorrows extends Component implements HasTable, HasForms
             )
             ->columns([
                 Split::make([
+                    ImageColumn::make('student.user.avatar')
+                            ->size(50)
+                            ->circular()
+                            ->grow(false),
                     Stack::make([
-                        TextColumn::make('student_id')
+
+                            TextColumn::make('student_id')
                             ->formatStateUsing(function (
                                 Student $student,
                                 $state
