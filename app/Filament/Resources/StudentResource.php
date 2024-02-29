@@ -6,6 +6,7 @@ use App\Filament\Resources\StudentResource\Pages;
 use App\Filament\Resources\StudentResource\RelationManagers;
 
 use App\Models\Student;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Form;
@@ -29,14 +30,16 @@ class StudentResource extends Resource
             ->schema([
                 Grid::make(4)
                 ->schema([
-                Forms\Components\TextInput::make('user_id')
+                Forms\Components\Select::make('user_id')
+                    ->hiddenOn('edit')
+                    ->searchable()
                     ->required()
-                    ->numeric()
+                        ->options(User::where('is_admin', 0)->pluck('user_name', 'id'))
                     ->label('User ID')
-                    ->disabled()
                     ->columnSpan(1),
                 Forms\Components\TextInput::make('student_number')
                     ->required()
+                    ->unique()
                     ->maxLength(255)
                     ->columnSpan(3),
                 Forms\Components\TextInput::make('course')
@@ -66,7 +69,9 @@ class StudentResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('user_id')
                     ->badge()
+
                     ->label('User ID')
+
                     ->sortable()
                    ,
                 Tables\Columns\TextColumn::make('student_number')
@@ -120,7 +125,7 @@ class StudentResource extends Resource
     {
         return [
             'index' => Pages\ListStudents::route('/'),
-            'create' => Pages\CreateStudent::route('/create'),
+            // 'create' => Pages\CreateStudent::route('/create'),
             // 'edit' => Pages\EditStudent::route('/{record}/edit'),
         ];
     }

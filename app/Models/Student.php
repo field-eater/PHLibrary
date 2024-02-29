@@ -22,10 +22,7 @@ class Student extends Model
         'date_of_birth',
     ];
 
-    public function borrows(): HasMany
-    {
-        return $this->HasMany(Borrow::class);
-    }
+
 
     public function user(): BelongsTo
     {

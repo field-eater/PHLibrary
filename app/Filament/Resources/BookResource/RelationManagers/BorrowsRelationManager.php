@@ -18,7 +18,7 @@ class BorrowsRelationManager extends RelationManager
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('student_id')
+                Forms\Components\TextInput::make('user_id')
                     ->required()
                     ->maxLength(255),
             ]);
@@ -27,9 +27,9 @@ class BorrowsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
-            ->recordTitleAttribute('student_id')
+            ->recordTitleAttribute('user_id')
             ->columns([
-                Tables\Columns\TextColumn::make('student_id'),
+                Tables\Columns\TextColumn::make('user_id'),
             ])
             ->filters([
                 //

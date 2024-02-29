@@ -33,6 +33,7 @@ class StudentPanelProvider extends PanelProvider
             ->maxContentWidth(MaxWidth::ScreenTwoExtraLarge)
             ->colors([
                 'primary' => Color::Violet,
+                'slate' => Color::Slate,
                 'info' => Color::Indigo,
                 'gray' => Color::Gray,
             ])

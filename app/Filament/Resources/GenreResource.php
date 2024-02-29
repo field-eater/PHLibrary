@@ -8,6 +8,7 @@ use App\Filament\Resources\GenreResource\RelationManagers\BooksRelationManager;
 use App\Models\Genre;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Set;
 use Filament\Infolists\Components\Grid;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
@@ -15,6 +16,7 @@ use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
+use Illuminate\Support\Str;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -33,6 +35,14 @@ class GenreResource extends Resource
                 Forms\Components\TextInput::make('genre_title')
                     ->label('Title')
                     ->required()
+                    ->live()
+                    ->afterStateUpdated(fn (Set $set, ?string $state) => $set('genre_slug', Str::slug($state)))
+                    ->maxLength(255)
+                    ->columnSpanFull(),
+                Forms\Components\TextInput::make('genre_slug')
+                    ->label('Slug')
+                    ->required()
+                    // ->disabled()
                     ->maxLength(255)
                     ->columnSpanFull(),
                 Forms\Components\Textarea::make('genre_description')
@@ -52,6 +62,7 @@ class GenreResource extends Resource
                 ->schema([
                     Section::make(fn ($record) => $record->genre_title)
                     ->schema([
+
                         TextEntry::make('genre_description')
                         ->label('')
                         ->prose(),
@@ -79,7 +90,12 @@ class GenreResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('genre_title')
                     ->label('Title')
+                    ->badge()
                     ->searchable(),
+
+                Tables\Columns\TextColumn::make('genre_description')
+                    ->label('Genre Description')
+                    ->wrap(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

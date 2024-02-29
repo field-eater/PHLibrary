@@ -19,6 +19,7 @@ use Filament\Resources\Pages\ViewRecord;
 class ViewBook extends ViewRecord
 {
     protected static string $resource = BookResource::class;
+    protected static ?string $slug = 'slug';
 
 
     protected function getHeaderActions(): array
@@ -29,7 +30,7 @@ class ViewBook extends ViewRecord
                 ->icon('heroicon-m-hand-raised')
                 ->requiresConfirmation()
                 ->form([
-                    Select::make('student_id')
+                    Select::make('user_id')
                     ->label('Student Number')
                     ->options(Student::all()->pluck('student_number', 'id')),
                     DatePicker::make('date_borrowed')
@@ -48,7 +49,7 @@ class ViewBook extends ViewRecord
                                 $copy->status = BookCopyStatusEnum::Unavailable;
                                 $copy->save();
                                 Borrow::create([
-                                    'student_id' => $data['student_id'],
+                                    'user_id' => $data['user_id'],
                                     'date_borrowed' => $data['date_borrowed'],
                                     'book_id' => $record->id,
                                     'book_copy_id' => $copy->id,

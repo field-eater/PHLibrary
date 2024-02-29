@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('borrows', function (Blueprint $table) {
-
-            $table->foreignId('book_id')->constrained('books')->cascadeOnUpdate()->cascadeOnDelete()->nullable()->after('student_id');
+        Schema::table('genres', function (Blueprint $table) {
+            //
+            $table->string('genre_slug')->nullable()->after('genre_title');
         });
     }
 
@@ -22,9 +22,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('borrows', function (Blueprint $table) {
+        Schema::table('genres', function (Blueprint $table) {
             //
-            $table->dropColumn('book_id');
+            $table->dropColumn('genre_slug');
         });
     }
 };

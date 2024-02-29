@@ -13,7 +13,7 @@ class Borrow extends Model
     use HasFactory;
 
     protected $fillable = [
-        'student_id',
+        'user_id',
         'book_id',
         'book_copy_id',
         'date_borrowed',
@@ -27,6 +27,11 @@ class Borrow extends Model
     public function student(): BelongsTo
     {
         return $this->belongsTo(Student::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function book(): BelongsTo

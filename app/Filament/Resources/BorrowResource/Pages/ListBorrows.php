@@ -6,12 +6,14 @@ use App\Filament\Resources\BorrowResource;
 use App\Filament\Resources\BorrowResource\Widgets\BorrowStatsWidget;
 use App\Models\Borrow;
 use Filament\Actions;
+use Filament\Pages\Concerns\ExposesTableToWidgets;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Resources\Pages\ListRecords\Tab;
 use Illuminate\Database\Eloquent\Builder;
 
 class ListBorrows extends ListRecords
 {
+    use ExposesTableToWidgets;
     protected static string $resource = BorrowResource::class;
     protected function getHeaderWidgets(): array
     {
@@ -36,13 +38,18 @@ class ListBorrows extends ListRecords
                         'pending'
                     )
                 ),
+            'borrowed' => Tab::make()
+                ->icon('heroicon-o-hand-raised')
+
+                ->modifyQueryUsing(
+                    fn(Builder $query) => $query->where(
+                        'return_status',
+                        'borrowed'
+                    )
+                ),
             'returned' => Tab::make()
                 ->icon('heroicon-m-arrows-pointing-in')
-                ->badge(
-                    Borrow::query()
-                        ->where('return_status', 'returned')
-                        ->count()
-                )
+
                 ->modifyQueryUsing(
                     fn(Builder $query) => $query->where(
                         'return_status',
@@ -56,7 +63,10 @@ class ListBorrows extends ListRecords
     {
         return [
             Actions\CreateAction::make()
+                ->modalHeading('Borrow Book')
+                ->label('Borrow')
                 ->outlined()
+                ->modalWidth('md')
                 ->icon('heroicon-c-hand-raised'),
         ];
     }

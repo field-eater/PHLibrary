@@ -11,12 +11,15 @@ use Filament\Actions\ViewAction;
 use Filament\Forms;
 use Filament\Forms\Components\Grid as FormGrid;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Infolists\Components\Actions;
 use Filament\Infolists\Components\Actions\Action;
 use Filament\Infolists\Components\Card;
 use Filament\Infolists\Components\Grid;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\RepeatableEntry;
+use Illuminate\Support\Str;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\Split;
 use Filament\Infolists\Components\Tabs;
@@ -39,6 +42,12 @@ class AuthorResource extends Resource
     protected static ?string $navigationGroup = 'Book Management';
     protected static ?string $navigationParentItem = 'Books';
 
+    public static function generateSlug(string $field1Value, string $field2Value): string
+    {
+        $slug = Str::slug($field1Value . '-' . $field2Value);
+        return $slug;
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -51,12 +60,28 @@ class AuthorResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('author_first_name')
                             ->label('First Name')
+                            ->live()
+                            ->afterStateUpdated(function (Get $get, Set $set,?string $state) {
+                                $authorln = $get('author_last_name');
+                                $slug = self::generateSlug($state, $authorln);
+                                $set('author_slug', $slug);
+                            })
                             ->required()
                             ->maxLength(255),
                         Forms\Components\TextInput::make('author_last_name')
                             ->label('Last Name')
                             ->required()
+                            ->afterStateUpdated(function (Get $get, Set $set,?string $state) {
+                                $authorfn = $get('author_first_name');
+                                $slug = self::generateSlug($authorfn, $state);
+                                $set('author_slug', $slug);
+                            })
+                            ->live()
                             ->maxLength(255),
+                        Forms\Components\TextInput::make('author_slug')
+                            ->label('Slug')
+                            ->required()
+
                     ])
                     ->columnSpan(1),
                 Forms\Components\Textarea::make('author_details')
@@ -120,6 +145,7 @@ class AuthorResource extends Resource
                     Tables\Columns\TextColumn::make('author_first_name')
                         ->weight('bold')
                         ->label('Name')
+                        ->alignCenter()
                         ->formatStateUsing(
                             fn(
                                 Author $record

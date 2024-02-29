@@ -38,7 +38,7 @@ enum BorrowStatusEnum: string implements HasLabel, HasColor, HasIcon
         return match ($this) {
             self::Pending => 'heroicon-c-clock',
             self::Returned => 'heroicon-c-check-badge',
-            self::Borrowed => 'heroicon-c-hand-open',
+            self::Borrowed => 'heroicon-c-hand-raised',
 
 
         };

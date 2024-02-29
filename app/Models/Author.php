@@ -14,9 +14,15 @@ class Author extends Model
     protected $fillable = [
         'author_image',
         'author_first_name',
+        'author_slug',
         'author_last_name',
         'author_details',
     ];
+
+        public function getRouteKeyName(): string
+    {
+        return 'author_slug';
+    }
 
     public function books(): HasMany
     {

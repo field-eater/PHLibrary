@@ -11,10 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('borrows', function (Blueprint $table) {
+        Schema::table('books', function (Blueprint $table) {
             //
-            $table->date('estimated_return_date')->after('date_borrowed')->nullable();
-            $table->text('remarks')->after('return_status')->nullable();
+            $table->string('book_slug')->nullable()->after('book_name');
         });
     }
 
@@ -23,10 +22,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('borrows', function (Blueprint $table) {
+        Schema::table('books', function (Blueprint $table) {
             //
-            $table->dropColumn('estimated_return_date');
-            $table->dropColumn('remarks');
+            $table->dropColumn('book_slug');
         });
     }
 };

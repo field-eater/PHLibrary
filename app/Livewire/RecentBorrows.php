@@ -30,7 +30,7 @@ class RecentBorrows extends Component implements HasTable, HasForms
     use InteractsWithTable;
     use InteractsWithForms;
 
-    public Model $record;
+    public ?Model $record;
 
     // protected function paginateTableQuery(Builder $query): CursorPaginator
     // {
@@ -46,34 +46,22 @@ class RecentBorrows extends Component implements HasTable, HasForms
             ->query(
                 Borrow::query()
                     ->whereBelongsTo($this->record)
-                    ->where('return_status', BorrowStatusEnum::Pending)
+                    ->where('return_status', BorrowStatusEnum::Borrowed)
                     ->limit(2)
                     ->orderBy('date_borrowed', 'desc')
             )
             ->columns([
                 Split::make([
-                    ImageColumn::make('student.user.avatar')
+                    ImageColumn::make('user.avatar')
                             ->size(50)
                             ->circular()
                             ->grow(false),
                     Stack::make([
 
-                            TextColumn::make('student_id')
-                            ->formatStateUsing(function (
-                                Student $student,
-                                $state
-                            ) {
-                                $studentId = $student
-                                    ->find($state)
-                                    ->pluck('user_id');
-                                $borrowingUserName =
-                                    User::find($studentId)->value(
-                                        'first_name'
-                                    ) .
-                                    ' ' .
-                                    User::find($studentId)->value('last_name');
-                                return $borrowingUserName;
-                            })
+                            TextColumn::make('user_id')
+                            ->formatStateUsing(fn ($state) =>
+                            User::where('id',$state)->value('first_name').' '. User::where('id',$state)->value('last_name')
+                           )
                             ->label('')
                             ->weight('bold')
                             ->columnSpan(2),
@@ -85,13 +73,10 @@ class RecentBorrows extends Component implements HasTable, HasForms
                             ->label(''),
                     ]),
                     Stack::make([
-                        TextColumn::make('return_status')
-                            ->label('')
-                            ->size(TextColumn\TextColumnSize::Medium)
-                            ->badge(),
                         TextColumn::make('estimated_return_date')
-                            ->label('Estimated Return Date')
+                            ->description('Estimated Date', position: 'above')
                             ->size(TextColumn\TextColumnSize::ExtraSmall)
+                            ->badge()
                             ->date(),
                     ])->alignment(Alignment::End),
                 ]),

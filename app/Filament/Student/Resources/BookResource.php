@@ -6,6 +6,7 @@ use App\Enums\BookCopyStatusEnum;
 use App\Enums\BorrowStatusEnum;
 use App\Filament\Student\Resources\BookResource\Pages;
 use App\Filament\Student\Resources\BookResource\RelationManagers;
+use App\Filament\Student\Resources\BookResource\RelationManagers\RatingsRelationManager;
 use App\Livewire\RecentBorrows;
 use App\Models\BookCopy;
 use App\Models\Author;
@@ -66,6 +67,7 @@ class BookResource extends Resource
                     ->grow(false),
                     Stack::make([
                     Tables\Columns\TextColumn::make('book_name')
+
                         ->weight('bold')
                         ->description(function (Book $record):string {
                             $author = Author::whereRelation('books', 'author_id', $record->author_id)->get(['author_first_name', 'author_last_name']);
@@ -106,17 +108,16 @@ class BookResource extends Resource
                 ->requiresConfirmation()
                 ->form([
                     Forms\Components\DatePicker::make('date_borrowed')
-                    ->label('Borrow Date')
-                    ->after('tomorrow')
+                    ->label('Issued Date')
+                    ->before('tomorrow')
                     ->required(),
                 ])
                 ->visible(fn ($record): bool => (BookCopy::whereBelongsTo($record)->where('status', BookCopyStatusEnum::Available)->count() > 0) ? true : false)
-                ->hidden(fn () => Auth::user()->is_admin > 0)
                 ->action(
                     function ($record, array $data)
                     {
 
-                        $student = Student::whereBelongsTo(Auth::user());
+                        $student = Student::whereBelongsTo(Auth::user())->first();
                         $bookCopies =  BookCopy::whereBelongsTo($record)->get();
                         foreach($bookCopies as $copy)
                         {
@@ -125,7 +126,7 @@ class BookResource extends Resource
                                 $copy->status = BookCopyStatusEnum::Unavailable;
                                 $copy->save();
                                 Borrow::create([
-                                    'student_id' => $student->id,
+                                    'user_id' => $student->id,
                                     'date_borrowed' => $data['date_borrowed'],
                                     'book_id' => $record->id,
                                     'book_copy_id' => $copy->id,
@@ -272,6 +273,7 @@ class BookResource extends Resource
     {
         return [
             //
+            RatingsRelationManager::class
         ];
     }
 

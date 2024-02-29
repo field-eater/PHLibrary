@@ -20,6 +20,7 @@ use Filament\Forms\Components\Grid as FormGrid;
 use Filament\Forms\Components\Section as FormSection;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Form;
+use Filament\Forms\Set;
 use Filament\Infolists\Components\Actions as InfoActions;
 use Filament\Infolists\Components\Actions\Action as InfoAction;
 use Filament\Infolists\Components\Grid as InfoGrid;
@@ -34,9 +35,12 @@ use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
 use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\Layout\Stack;
+use Illuminate\Support\Str;
+use Filament\Tables\Filters\QueryBuilder;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Filament\Tables\Filters\QueryBuilder\Constraints\SelectConstraint;
 use Yepsua\Filament\Forms\Components\Rating as RatingField;
 
 class BookResource extends Resource
@@ -46,6 +50,8 @@ class BookResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-book-open';
 
     protected static ?string $navigationGroup = 'Book Management';
+
+
 
 
     public static function form(Form $form): Form
@@ -63,10 +69,16 @@ class BookResource extends Resource
                         FormGrid::make(6)
                         ->schema([
                             Forms\Components\TextInput::make('book_name')
-                        ->required()
-                        ->maxLength(255)
-                        ->columnSpan(6),
-                        Forms\Components\Select::make('publication_date')
+                                ->required()
+                                ->maxLength(255)
+                                ->live()
+                                ->afterStateUpdated(fn (Set $set, ?string $state) => $set('book_slug', Str::slug($state)))
+                                ->columnSpan(4),
+                            Forms\Components\TextInput::make('book_slug')
+                                ->columnSpan(2)
+                                ->disabled()
+                                ->required(),
+                            Forms\Components\Select::make('publication_date')
                             ->options(function ()
                             {
                                 $years = range(date('Y') - 300, date('Y'));
@@ -195,35 +207,7 @@ class BookResource extends Resource
 
                                         })
                                         ->columnSpan(1),
-                                    InfoActions::make([
-                                        InfoAction::make('Rate')
-                                        ->label('Rate')
-                                        ->icon('heroicon-m-star')
-                                        ->color('warning')
-                                        ->link()
-                                        ->modalWidth(MaxWidth::Small)
-                                        ->form([
-                                            RatingField::make('rating_score')
-                                            ->required()
 
-                                            ->label('Rating'),
-                                            Textarea::make('comment')
-                                            ->rows(10)
-                                            ->cols(5),
-                                        ])
-                                        ->action(function (array $data, $record)
-                                        {
-                                            $rating = new Rating([
-                                                'user_id' => Auth::user()->id,
-                                                'book_id' => $record->id,
-                                                'rating_score' => $data['rating_score'],
-                                                'comment' => $data['comment']
-                                            ]);
-                                            $rating->save();
-                                        }),
-                                    ])
-                                    ->alignment('end')
-                                    ->columnSpan(1),
                                     TextEntry::make('book_details')
                                     ->columnSpan('full')
                                         ->label('Description')
@@ -324,7 +308,14 @@ class BookResource extends Resource
                ])
             ])
             ->filters([
-                //
+                // TODO: Add a filter for Genres
+                // QueryBuilder::make()
+                // ->constraints([
+                //     // ...
+                //     SelectConstraint::make('genres')
+                //         ->multiple() // Filter the `department` column on the `creator` relationship
+                //         ->options(Genre::all()->pluck('genre_title', 'id'))
+                // ]),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
@@ -334,7 +325,7 @@ class BookResource extends Resource
                 ->requiresConfirmation()
                 ->form([
                     Forms\Components\DatePicker::make('date_borrowed')
-                    ->label('Borrow Date')
+                    ->label('Issued Date')
                     ->after('tomorrow')
                     ->required(),
                 ])
@@ -353,7 +344,7 @@ class BookResource extends Resource
                                 $copy->status = BookCopyStatusEnum::Unavailable;
                                 $copy->save();
                                 Borrow::create([
-                                    'student_id' => $student->id,
+                                    'user_id' => $student->id,
                                     'date_borrowed' => $data['date_borrowed'],
                                     'book_id' => $record->id,
                                     'book_copy_id' => $copy->id,
@@ -390,6 +381,7 @@ class BookResource extends Resource
 
     public static function getPages(): array
     {
+        $book = static::$model;
         return [
             'index' => Pages\ListBooks::route('/'),
             'create' => Pages\CreateBook::route('/create'),

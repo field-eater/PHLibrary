@@ -13,9 +13,11 @@ class Book extends Model
 {
     use HasFactory;
 
+
     protected $fillable = [
         'property_id',
         'book_image',
+        'book_slug',
         'book_name',
         'publication_date',
         'book_details',
@@ -24,14 +26,12 @@ class Book extends Model
         'genre_id',
         'rating',
     ];
+    public function getRouteKeyName(): string
+    {
+        return 'book_slug';
+    }
 
 
-    // protected function dateBorrowed(): Attribute
-    // {
-    //     return Attribute::make(
-    //         get: fn ($value) => date_format($value, 'M d, Y'),
-    //     );
-    // }
 
 
     public function bookcopies()
@@ -65,15 +65,17 @@ class Book extends Model
     }
 
 
+
+
     protected static function boot()
     {
         parent::boot();
 
-        static::creating(function ($book) {
+        static::created(function ($book) {
             for ($i = 0; $i < $book->available_copies; $i++) {
                 $copyId = $book->property_id . '-' . ($i + 1);
                 $book->bookCopies()->create([
-                    'id' => $copyId,
+                    'copy_id' => $copyId,
                 ]);
             }
         });
@@ -104,40 +106,6 @@ class Book extends Model
         // });
     }
 
-    // public function createBookCopies()
-    // {
-    //     $availableCopies = $this->available_copies ?? 1; // Use the specified number or default to 1
 
-    //     for ($i = 1; $i <= $availableCopies; $i++) {
-    //         $this->bookCopies()->create([
-    //             'copy_id' => "{$this->property_id}-{$i}",
-    //         ]);
 
-    //     }
-    // }
-
-    // public function updateBookCopies()
-    // {
-    //     $available_copies = $this->num_copies ?? 1;
-
-    //     $currentCopies = $this->bookCopies()->count();
-
-    //     if ($available_copies > $currentCopies) {
-    //         $this->createBookCopies();
-    //     } elseif ($available_copies < $currentCopies) {
-    //         $this->deleteBookCopies($currentCopies - $available_copies);
-    //     }
-    // }
-
-    // // Method to delete BookCopies when the Book is deleted
-    // public function deleteBookCopies($count = null)
-    // {
-    //     if ($count === null) {
-    //         // Delete all related BookCopies
-    //         $this->bookCopies()->delete();
-    //     } else {
-    //         // Delete a specified number of related BookCopies
-    //         $this->bookCopies()->limit($count)->delete();
-    //     }
-    // }
 }

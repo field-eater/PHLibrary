@@ -34,7 +34,7 @@ class StudentStatWidget extends BaseWidget
             Stat::make('Total Students', $this->getPageTableQuery()->count()),
             Stat::make(
                 'Total Borrowing Students',
-                $this->borrow->distinct('student_id')->count()
+                $this->borrow->distinct('user_id')->count()
             ),
         ];
     }

@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Support\Enums\VerticalAlignment;
 use Filament\Tables;
 use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\Layout\Panel;
@@ -55,19 +56,24 @@ class RatingsRelationManager extends RelationManager
                             ->grow(false)
                             // ->defaultImageUrl(url())
                             ,
+                       Stack::make([
                         Tables\Columns\TextColumn::make('user.user_name')
-                            ->searchable()
-                            ->label('name')
-                            ->badge()
-                            ->grow(false),
+                        ->searchable()
+                        ->label('name')
+                        ->color('slate-50')
+                        ->weight('bold')
+                        ->grow(false),
+                        RatingColumn::make('rating_score'),
 
-                        Tables\Columns\TextColumn::make('created_at')
-                            ->date()
-                            ->since()
-                            ->alignEnd()
-                            ->label('date'),
+
+                       ]),
+                       Tables\Columns\TextColumn::make('created_at')
+                       ->date()
+                       ->since()
+                       ->alignEnd()
+                       ->label('date'),
                     ]),
-                    RatingColumn::make('rating_score'),
+
                     Tables\Columns\TextColumn::make('comment'),
                 ])->space(3),
             ])

@@ -54,8 +54,8 @@ class BorrowResource extends Resource
         return $form->schema([
             //
             Grid::make(1)->schema([
-                Select::make('student_id')
-                    ->options(Student::all()->pluck('student_number', 'id'))
+                Select::make('user_id')
+                    ->options(Student::all()->pluck('student_number', 'user_id'))
                     ->getOptionLabelFromRecordUsing(
                         fn(Model $record): string => Book::find(
                             $record->book_id
@@ -85,8 +85,10 @@ class BorrowResource extends Resource
                 // TextInput::make('book_id'),
                 // // TODO: Ilipat sa lifecycle ng borrows
 
-                DatePicker::make('date_borrowed')->required(),
-                DatePicker::make('estimated_return_date')->required(),
+                DatePicker::make('date_borrowed')
+                ->required()
+                ->label('Issued Date'),
+
             ]),
         ]);
     }
@@ -96,11 +98,12 @@ class BorrowResource extends Resource
         return $table
             ->columns([
                 //
-                TextColumn::make('student.student_number')
+                TextColumn::make('user.student.student_number')
                     ->searchable()
                     ->label('Student Number'),
                 TextColumn::make('book.book_name')
                     ->searchable()
+
                     ->description(
                         fn($record) => implode(
                             BookCopy::where('id', $record->book_copy_id)
@@ -132,17 +135,39 @@ class BorrowResource extends Resource
                     ->badge(),
                 TextColumn::make('remarks')
                     ->label('Remarks')
+                    ->limit(100)
                     ->wrap(),
             ])
             ->filters([
                 //
             ])
             ->actions([
+                Tables\Actions\Action::make('approve')
+                    ->icon('heroicon-c-check-circle')
+                    ->color('success')
+                    ->visible(fn($record) => $record->return_status == BorrowStatusEnum::Pending)
+                    ->form([
+                        DatePicker::make('estimated_return_date')
+                        ->required(),
+
+                    ])
+                    ->modalWidth('sm')
+                    ->action(function ($record, array $data) {
+                        $record->estimated_return_date = $data['estimated_return_date'];
+                        $record->return_status = BorrowStatusEnum::Borrowed;
+                        $record->save();
+
+                        Notification::make()
+                            ->title('Saved successfully')
+                            ->success()
+                            ->send();
+                    }),
                 Tables\Actions\Action::make('return')
                     ->icon('heroicon-o-arrow-uturn-right')
-                    ->visible(fn($record) => $record->date_returned == null)
+                    ->visible(fn($record) => $record->return_status == BorrowStatusEnum::Borrowed)
                     ->form([
-                        DatePicker::make('date_returned'),
+                        DatePicker::make('date_returned')
+                        ->required(),
                         Textarea::make('remarks'),
                     ])
                     ->modalWidth('sm')

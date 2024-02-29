@@ -33,7 +33,7 @@ class BookCopy extends Model
     {
         parent::boot();
 
-        static::creating(function ($bookCopy,) {
+        static::created(function ($bookCopy) {
             $bookCopy->book->touch();
         });
 

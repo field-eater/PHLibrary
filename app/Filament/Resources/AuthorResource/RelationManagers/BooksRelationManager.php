@@ -8,6 +8,7 @@ use App\Models\Rating;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Support\Enums\Alignment;
 use Filament\Tables;
 use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\Layout\Stack;
@@ -43,27 +44,31 @@ class BooksRelationManager extends RelationManager
                     Stack::make([
                     Tables\Columns\ImageColumn::make('book_image')
                     ->height(130)
-                    ->grow(false),
+                    ->alignment(Alignment::Center),
                     Tables\Columns\TextColumn::make('book_name')
                         ->description(fn (Book $record) => $record->publication_date)
                         ->weight('bold')
+                        ->alignment(Alignment::Center)
                         ->searchable(),
-                    Tables\Columns\TextColumn::make('rating')
-                        ->formatStateUsing(function ($record) {
-                            $rating = Rating::where('book_id', $record->id)->avg('rating_score');
-                            $roundedRating = round($rating, 2);
-                            if ($rating)
-                            {
-                                return $roundedRating;
-                            }
-                            return 'Not Rated';
+                    Split::make([
 
-                        })
-                        ->icon('heroicon-m-star')
-                        ->color('warning')
-                        ->iconPosition('after')
-                        ->default('Not Rated')
-                        ->sortable(),
+                    // Tables\Columns\TextColumn::make('rating')
+                    //     ->formatStateUsing(function ($record) {
+                    //         $rating = Rating::where('book_id', $record->id)->avg('rating_score');
+                    //         $roundedRating = round($rating, 2);
+                    //         if ($rating)
+                    //         {
+                    //             return $roundedRating;
+                    //         }
+                    //         return 'Not Rated';
+
+                    //     })
+                    //     ->icon('heroicon-m-star')
+                    //     ->color('warning')
+                    //     ->iconPosition('after')
+                    //     ->default('Not Rated')
+                    //     ->sortable(),
+                    ]),
                     ]),
                ])
             ])

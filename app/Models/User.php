@@ -45,6 +45,11 @@ class User extends Authenticatable implements FilamentUser, HasName, HasAvatar, 
         'remember_token',
     ];
 
+    public function getRouteKeyName(): string
+    {
+        return 'user_name';
+    }
+
     public function isActive()
     {
         return $this->is_activated;
@@ -65,6 +70,11 @@ class User extends Authenticatable implements FilamentUser, HasName, HasAvatar, 
     public function getFilamentAvatarUrl(): ?string
     {
         return $this->avatar;
+    }
+
+    public function borrows(): HasMany
+    {
+        return $this->HasMany(Borrow::class);
     }
 
     public function student(): HasOne

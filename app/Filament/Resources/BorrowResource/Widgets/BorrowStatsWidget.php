@@ -35,7 +35,7 @@ class BorrowStatsWidget extends BaseWidget
 
         $mostBorrowedBook = Book::find($mostBorrowedID)->book_name;
 
-        $borrowsData = Trend::model(Borrow::class)
+        $borrowsData = Trend::query(Borrow::query()->where('return_status', BorrowStatusEnum::Borrowed))
         ->between(
             start: now()->startOfYear(),
             end: now()->endOfYear(),
@@ -58,12 +58,13 @@ class BorrowStatsWidget extends BaseWidget
 
         return [
             //
-            Stat::make('Borrows', $this->getPageTableQuery()->count())
-            ->chart($borrowsData)
-            ->description('Total number of borrows'),
             Stat::make('Most Borrowed Book', $mostBorrowedBook)
             ->color('primary')
             ->chart($borrowedBookData),
+            Stat::make('Borrows', $this->borrow->where('return_status', BorrowStatusEnum::Borrowed)->count())
+            ->chart($borrowsData)
+            ->description('Total number of borrows'),
+
             Stat::make('Returns', $this->borrow->where('return_status', BorrowStatusEnum::Returned)->count())
             ->description('Total number of books returned'),
 

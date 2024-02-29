@@ -39,6 +39,7 @@ class AdminPanelProvider extends PanelProvider
 
             ->colors([
                 'primary' => Color::Blue,
+                'slate' => Color::Slate,
                 'info' => Color::Cyan,
                 'gray' => Color::Gray,
             ])

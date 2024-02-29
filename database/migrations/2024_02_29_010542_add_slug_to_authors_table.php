@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
+        Schema::table('authors', function (Blueprint $table) {
             //
-            $table->boolean('is_activated')->default(1)->after('is_admin');
+            $table->string('author_slug')->nullable()->after('author_last_name');
         });
     }
 
@@ -22,9 +22,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
+        Schema::table('authors', function (Blueprint $table) {
             //
-            $table->boolean('is_activated');
+            $table->dropColumn('author_slug');
         });
     }
 };

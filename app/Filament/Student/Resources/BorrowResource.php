@@ -11,6 +11,7 @@ use App\Models\Book;
 use App\Models\BookCopy;
 use App\Models\Borrow;
 use App\Models\Student;
+use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -56,19 +57,18 @@ class BorrowResource extends Resource
                     ->required(),
                 DatePicker::make('date_borrowed')
                 ->required()
-                ->after('tomorrow'),
-                DatePicker::make('estimated_return_date')
-                ->required()
-                ,
+                ->columnSpanFull()
+                ->label('Date Issued')
+                ->before('tomorrow'),
 
             ]);
     }
 
     public static function table(Table $table): Table
     {
-        $student = Student::whereBelongsTo(Auth::user())->get();
+        $student = Auth::user();
         return $table
-            ->query(Borrow::query()->whereBelongsTo($student))
+            ->query(Borrow::query()->whereBelongsTo($student)->orderBy('created_at', 'desc'))
             ->columns([
                 //
                 ImageColumn::make('book.book_image')
@@ -77,6 +77,7 @@ class BorrowResource extends Resource
                 ->alignment(Alignment::End)
                 ->height(100),
                 TextColumn::make('book.book_name')
+                ->url(fn ($record):string => route('filament.student.resources.books.view', ['record' => $record]))
                 ->weight('bold')
                 ->description(function ($state) {
                     $book = Book::where('book_name', $state)->first();
@@ -89,11 +90,44 @@ class BorrowResource extends Resource
 
                 ColumnGroup::make('Dates', [
                     TextColumn::make('date_borrowed')
-                    ->label('Date of Borrow')
+                    ->label('Issued Date')
                     ->date()
                     ,
                     TextColumn::make('estimated_return_date')
                     ->date()
+                    ->color(function ($state, $record) {
+                        if ($record->return_status == BorrowStatusEnum::Returned) {
+                            return 'success';
+                        }
+                        else if (Carbon::now() > $state) {
+                            return 'danger';
+                        }
+                        else {
+                            return 'info';
+                        }
+                    })
+                    ->iconColor(function ($state, $record) {
+                        if ($record->return_status == BorrowStatusEnum::Returned) {
+                            return 'success';
+                        }
+                        else if (Carbon::now() > $state) {
+                            return 'danger';
+                        }
+                        else {
+                            return 'info';
+                        }
+                    })
+                    ->icon(function ($state, $record) {
+                        if ($record->return_status == BorrowStatusEnum::Returned) {
+                            return 'heroicon-c-check-circle';
+                        }
+                        else if (Carbon::now() > $state) {
+                            return 'heroicon-c-x-circle';
+                        }
+                        else {
+                            return 'heroicon-c-clock';
+                        }
+                    })
                     ->since(),
                     TextColumn::make('date_returned')
                     ->date(),

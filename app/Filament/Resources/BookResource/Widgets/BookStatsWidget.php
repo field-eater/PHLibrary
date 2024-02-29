@@ -63,8 +63,15 @@ class BookStatsWidget extends BaseWidget
             ];
         });
 
-        $highestRated = $averages->sortByDesc('average')->first();
-        $bookName = $this->record->find($highestRated['book_id'])->book_name;
+        $highestRated = 'No ratings';
+        $bookName = "";
+        $description = '';
+        if (count($averages) > 0)
+        {
+            $highestRated = $averages->sortByDesc('average')->first();
+            $bookName = $this->record->find($highestRated['book_id'])->book_name;
+            $description = 'Highest Rated Book';
+        }
 
 
 
@@ -81,10 +88,10 @@ class BookStatsWidget extends BaseWidget
             ->description('Total number of book copies')
             ->descriptionIcon('heroicon-c-document-duplicate')
             ->chart($bookCopiesData),
-            Stat::make($bookName, $highestRated['average'])
+             Stat::make($bookName, (is_array($highestRated)) ? $highestRated['average']: $highestRated)
             ->descriptionIcon('heroicon-c-arrow-up-circle')
             ->color('warning')
-            ->description('Highest Rated Book'),
+            ->description($description),
 
 
         ];
