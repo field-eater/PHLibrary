@@ -17,7 +17,7 @@ class BorrowedChartWidget extends ChartWidget
 
     protected function getData(): array
     {
-        $data = Trend::query(Borrow::query()->where('return_status', BorrowStatusEnum::Pending))
+        $data = Trend::query(Borrow::query()->where('return_status', BorrowStatusEnum::Borrowed))
         ->between(
             start: now()->startOfMonth(),
             end: now()->endOfMonth(),

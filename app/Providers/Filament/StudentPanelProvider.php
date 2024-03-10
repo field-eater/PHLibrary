@@ -4,9 +4,11 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\EditProfile;
 use App\Filament\Pages\Register;
+use App\Filament\Student\Pages\StudentRegister;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -28,9 +30,16 @@ class StudentPanelProvider extends PanelProvider
         return $panel
             ->id('student')
             ->path('student')
+            ->brandLogo(asset('logos/logo-black.png'))
+            ->darkModeBrandLogo(asset('logos/logo-white.png'))
             ->topNavigation()
             ->spa()
             ->maxContentWidth(MaxWidth::ScreenTwoExtraLarge)
+            ->navigationGroups([
+                NavigationGroup::make()
+                ->label('Library')
+                ->icon('heroicon-o-building-library'),
+            ])
             ->colors([
                 'primary' => Color::Violet,
                 'slate' => Color::Slate,
@@ -49,7 +58,7 @@ class StudentPanelProvider extends PanelProvider
             ])
             ->databaseNotifications()
             ->login()
-            ->registration(Register::class)
+            ->registration(StudentRegister::class)
             ->emailVerification()
             ->passwordReset()
             ->profile(EditProfile::class)

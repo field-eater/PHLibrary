@@ -2,16 +2,20 @@
 
 namespace App\Models;
 
+use App\Traits\Favorable;
 use Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Support\Str;
 
 class Book extends Model
 {
     use HasFactory;
+    use Favorable;
 
 
     protected $fillable = [
@@ -30,8 +34,6 @@ class Book extends Model
     {
         return 'book_slug';
     }
-
-
 
 
     public function bookcopies()
@@ -59,10 +61,18 @@ class Book extends Model
         return $this->HasMany(Borrow::class);
     }
 
+
+
+
+
     public function getLastBorrowed(Borrow $borrow)
     {
-        return $borrow->whereBelongsTo(Book::class)->desc()->first();
+        return $borrow->whereBelongsTo(self::class)->desc()->first();
     }
+
+
+
+
 
 
 
@@ -70,6 +80,11 @@ class Book extends Model
     protected static function boot()
     {
         parent::boot();
+
+        static::creating(function ($book)
+        {
+            $book->book_slug = Str::slug($book->book_name);
+        });
 
         static::created(function ($book) {
             for ($i = 0; $i < $book->available_copies; $i++) {
@@ -84,6 +99,7 @@ class Book extends Model
             $originalCopies = $book->getOriginal('available_copies');
             $newCopies = $book->available_copies;
 
+            $book->book_slug = Str::slug($book->book_name);
             // Handle additions
             if ($newCopies > $originalCopies) {
                 $difference = $newCopies - $originalCopies;
@@ -100,10 +116,13 @@ class Book extends Model
             }
         });
 
-        // static::deleting(function ($book) {
-        //     // Delete BookCopies when the Book is deleted
-        //     $book->deleteBookCopies();
-        // });
+        static::deleting(function ($book) {
+            // Delete BookCopies when the Book is deleted
+            foreach ($book->bookCopies() as $bookCopy)
+            {
+                $bookCopy->each->delete();
+            }
+        });
     }
 
 

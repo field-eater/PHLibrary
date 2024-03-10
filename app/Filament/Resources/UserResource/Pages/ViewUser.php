@@ -8,5 +8,10 @@ use Filament\Resources\Pages\ViewRecord;
 
 class ViewUser extends ViewRecord
 {
+
+    public function getHeaderWidgetsColumns(): int | array
+    {
+        return 2;
+    }
     protected static string $resource = UserResource::class;
 }

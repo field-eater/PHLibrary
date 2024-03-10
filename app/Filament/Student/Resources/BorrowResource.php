@@ -77,7 +77,7 @@ class BorrowResource extends Resource
                 ->alignment(Alignment::End)
                 ->height(100),
                 TextColumn::make('book.book_name')
-                ->url(fn ($record):string => route('filament.student.resources.books.view', ['record' => $record]))
+                ->url(fn ($record):string => route('filament.student.resources.books.view', ['record' => $record->book]))
                 ->weight('bold')
                 ->description(function ($state) {
                     $book = Book::where('book_name', $state)->first();

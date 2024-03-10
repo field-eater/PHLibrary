@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,12 +17,19 @@ class Student extends Model
         //remove when student panel is made
         'user_id',
         'course',
+        'gender',
         'admission_year',
         'year_level',
         'student_number',
         'date_of_birth',
     ];
 
+    public function gender(): Attribute
+    {
+        return Attribute::make(
+            get: fn (string $state) => ucfirst($state),
+        );
+    }
 
 
     public function user(): BelongsTo

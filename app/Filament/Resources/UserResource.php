@@ -6,10 +6,21 @@ use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
 use App\Filament\Resources\UserResource\Widgets\UserStatsWidget;
 use App\Infolists\Components\Card;
+use App\Livewire\ListAuthorFavorites;
+use App\Livewire\ListBookFavorites;
+use App\Livewire\ListGenreFavorites;
 use App\Livewire\RecentBorrows;
+use App\Livewire\UserBooksRead;
+use App\Livewire\UserBorrows;
+use App\Livewire\UserProfileStats;
+use App\Livewire\UserRatings;
+use App\Models\Author;
+use App\Models\Book;
+use App\Models\Genre;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\Fieldset;
 use Filament\Infolists\Components\Grid;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\Livewire;
@@ -18,7 +29,7 @@ use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\Split as InfoSplit;
 use Filament\Infolists\Components\Tabs;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\View;
+
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\Alignment;
@@ -30,6 +41,7 @@ use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Infolists\Components\View;
 
 class UserResource extends Resource
 {
@@ -91,35 +103,32 @@ class UserResource extends Resource
                             ->schema([
                                 InfoSplit::make([
                                     ImageEntry::make('avatar')
-                                    ->extraAttributes(['class' => 'rounded-md'])
+
                                     ->label('')
+                                    ->circular()
                                     ->alignment(Alignment::Center)
                                     ->grow(false)
-                                    ->size(120),
-                                    Card::make()
-                                    ->schema([
-                                        TextEntry::make('first_name')
-                                            ->label('')
-                                            ->weight('bold')
-                                            ->size(TextEntry\TextEntrySize::Large)
-                                            ->columnSpan(2)
-                                            ->formatStateUsing(fn ($record) => $record->getFilamentName()),
-                                        TextEntry::make('student.student_number')
-                                            ->columnSpan(2)
-                                            ->icon('heroicon-c-user')
-                                            ->label('')
-                                            ->badge(),
-                                        TextEntry::make('user_name')
-                                            ->label('')
-                                            ->columnSpan(2)
-                                            ->icon('heroicon-c-at-symbol')
-                                            ->alignStart()
-                                            ->grow(false),
-                                    ])
-                                    ->columns(2)
+                                    ->size(80),
+
+
+                                    View::make('infolists.components.card'),
+
                                 ]),
 
+                                    TextEntry::make('student.biography')
+                                    ->label('')
+                                    ->prose()
+                                    ->columnSpanFull(),
+
+
+
+
+
                             ])->columnSpanFull(),
+
+
+
+
 
                             Section::make()
                             ->schema([
@@ -132,68 +141,98 @@ class UserResource extends Resource
                                     ->label('Year of Admission'),
 
 
-                            ])->columnSpan(1),
+                            ])->columnSpan(1)
+                            ->hidden(fn ($record) => ($record->is_admin == true) ? true : false),
                             Section::make()
                             ->schema([
                                 TextEntry::make('student.course')
-                                ->label('Course'),
-                                TextEntry::make('student.year_level')
-                                    ->label('Year Level')
-                                    ->formatStateUsing(fn ($state) => $state.'th Year'),
+                                    ->label('Course and Year')
+                                    ->badge()
+                                    ->icon('heroicon-c-academic-cap')
+                                    ->formatStateUsing(function ($state, $record) {
+                                        if($record->student->year_level > 3)
+                                        {
+                                            return $state.' - '.$record->student->year_level.'th Year';
+                                        }
+                                        else if($record->student->year_level == 3)
+                                        {
+                                            return $state.' - '.$record->student->year_level.'rd Year';
+                                        }
+                                        else if($record->student->year_level == 2)
+                                        {
+                                            return $state.' - '.$record->student->year_level.'nd Year';
+                                        }
+                                        else if($record->student->year_level == 1)
+                                        {
+                                            return $state.' - '.$record->student->year_level.'st Year';
+                                        }
 
-                            ])->columnSpan(1),
+                                    }),
+                                TextEntry::make('student.gender')
+                                    ->label('Gender')
+                                    ->badge()
+                                    ->icon('heroicon-c-user')
+                                    ->formatStateUsing(fn ($state) => ucwords($state)),
+
+
+                            ])
+                            ->hidden(fn ($record) => ($record->is_admin == true) ? true : false)
+                            ->columnSpan(1),
                         ]),
                         // TODO: Replace repeatable entry with Tables
-                        Tabs::make('Tables')
-
-                        ->columnSpan(3)
-                        ->tabs([
-                            Tabs\Tab::make('Borrowed Books')
-                            ->icon('heroicon-c-book-open')
-                            ->schema([
-                                RepeatableEntry::make('borrows')
-                                ->label('')
+                        Grid::make(2)
+                        ->schema([
+                            Livewire::make(UserProfileStats::class)
+                            ->columnSpanFull(),
+                            Tabs::make('Tables')
+                            ->columnSpanFull()
+                            ->activeTab(3)
+                            ->tabs([
+                                Tabs\Tab::make('Borrowed Books')
+                                ->icon('heroicon-c-book-open')
                                 ->schema([
-                                    InfoSplit::make([
-                                        ImageEntry::make('book.book_image')
-                                        ->label('')
-                                        ->height(80)
-                                        ->grow(false),
-                                        TextEntry::make('book.book_name')
-                                        ->size(TextEntry\TextEntrySize::Large)
-                                        ->label(''),
-                                        TextEntry::make('date_borrowed')
-                                        ->date()
-                                        ->label(''),
-                                        TextEntry::make('estimated_return_date')
-                                        ->since()
-                                        ->label(''),
-                                        TextEntry::make('date_returned')
-                                        ->date()
-                                        ->label(''),
-                                    ])
+                                    Livewire::make(UserBorrows::class),
                                 ]),
-                            ]),
-                            Tabs\Tab::make('Ratings')
-                            ->icon('heroicon-c-star')
-                            ->schema([
-                            RepeatableEntry::make('ratings')
-                                ->label('')
-                                ->contained(false)
+                                Tabs\Tab::make('Ratings')
+                                ->icon('heroicon-c-star')
                                 ->schema([
-                                    InfoSplit::make([
-                                        TextEntry::make('book.book_name')
-                                        ->label(''),
-                                        TextEntry::make('rating_score')
-                                        ->label('')
-                                        ->badge(),
-                                        TextEntry::make('comment')
-                                        ->label(''),
-                                    ])
+                                    Livewire::make(UserRatings::class),
+                                ]),
+                                Tabs\Tab::make('Favorites')
+                                ->icon('heroicon-c-bookmark')
+
+                                ->schema([
+
+                                    Tabs::make('favorites')
+                                    ->contained(false)
+                                    ->schema([
+                                        Tabs\Tab::make('Books')
+                                        ->icon('heroicon-c-book-open')
+                                        ->badge(fn ($record) => $record->favorites->where('favorable_type', Book::class)->count())
+                                        ->schema([
+                                            Livewire::make(ListBookFavorites::class),
+                                        ]),
+                                        Tabs\Tab::make('Authors')
+                                        ->icon('heroicon-c-pencil')
+                                        ->badge(fn ($record) => $record->favorites->where('favorable_type', Author::class)->count())
+                                        ->schema([
+                                            Livewire::make(ListAuthorFavorites::class),
+                                        ]),
+                                        Tabs\Tab::make('Genres')
+                                        ->icon('heroicon-c-queue-list')
+                                        ->badge(fn ($record) => $record->favorites->where('favorable_type', Genre::class)->count())
+                                        ->schema([
+                                            Livewire::make(ListGenreFavorites::class),
+                                        ]),
+
+                                    ]),
+
 
                                 ]),
                             ]),
                         ])
+                        ->columnSpan(3)
+                        ->hidden(fn ($record) => ($record->is_admin == true) ? true : false),
 
                     ]),
 
@@ -251,7 +290,8 @@ class UserResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\ViewAction::make()   ,
+                Tables\Actions\ViewAction::make()
+                ->visible(fn ($record) => $record->is_admin ? false : true),
                 Tables\Actions\EditAction::make()
                     ->modalWidth('lg')
                     ->slideOver(),

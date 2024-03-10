@@ -8,8 +8,10 @@ use App\Filament\Resources\GenreResource\RelationManagers\BooksRelationManager;
 use App\Models\Genre;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Infolists\Components\Grid;
+use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
@@ -35,16 +37,11 @@ class GenreResource extends Resource
                 Forms\Components\TextInput::make('genre_title')
                     ->label('Title')
                     ->required()
-                    ->live()
-                    ->afterStateUpdated(fn (Set $set, ?string $state) => $set('genre_slug', Str::slug($state)))
+                    ->unique(ignoreRecord: true)
+
                     ->maxLength(255)
                     ->columnSpanFull(),
-                Forms\Components\TextInput::make('genre_slug')
-                    ->label('Slug')
-                    ->required()
-                    // ->disabled()
-                    ->maxLength(255)
-                    ->columnSpanFull(),
+
                 Forms\Components\Textarea::make('genre_description')
                     ->required()
                     ->label('Description')
@@ -70,6 +67,19 @@ class GenreResource extends Resource
                     ->columnSpan(3),
                     Section::make('')
                     ->schema([
+                        ImageEntry::make('favorites.user.avatar')
+                            ->label('Favorited by:')
+                            ->circular()
+                            ->stacked()
+                            ->limit(3)
+                            ->visible(fn ($record):bool => $record->hasFavorites()),
+                        TextEntry::make('created_at')
+                            ->alignCenter()
+                            ->weight('bold')
+                            ->size('lg')
+                            ->label('')
+                            ->formatStateUsing(fn () => 'No favorites')
+                            ->hidden(fn ($record):bool => $record->hasFavorites()),
                         TextEntry::make('created_at')
                         ->color('gray')
                         ->badge()

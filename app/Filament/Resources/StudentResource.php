@@ -39,9 +39,14 @@ class StudentResource extends Resource
                     ->columnSpan(1),
                 Forms\Components\TextInput::make('student_number')
                     ->required()
-                    ->unique()
+                    ->unique(ignoreRecord: true)
                     ->maxLength(255)
-                    ->columnSpan(3),
+                    ->columnSpan(2),
+                Forms\Components\Select::make('gender')
+                    ->options([
+                        'male' => 'Male',
+                        'female' => 'Female',
+                    ]),
                 Forms\Components\TextInput::make('course')
                     ->required()
                     ->columnSpan(2),
@@ -77,6 +82,8 @@ class StudentResource extends Resource
                 Tables\Columns\TextColumn::make('student_number')
                     ->wrapHeader()
                     ->searchable(),
+                Tables\Columns\TextColumn::make('gender'),
+
                 Tables\Columns\TextColumn::make('date_of_birth')
                     ->date()
                     ->sortable(),

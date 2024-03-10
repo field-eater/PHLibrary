@@ -60,27 +60,13 @@ class AuthorResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('author_first_name')
                             ->label('First Name')
-                            ->live()
-                            ->afterStateUpdated(function (Get $get, Set $set,?string $state) {
-                                $authorln = $get('author_last_name');
-                                $slug = self::generateSlug($state, $authorln);
-                                $set('author_slug', $slug);
-                            })
                             ->required()
                             ->maxLength(255),
                         Forms\Components\TextInput::make('author_last_name')
                             ->label('Last Name')
                             ->required()
-                            ->afterStateUpdated(function (Get $get, Set $set,?string $state) {
-                                $authorfn = $get('author_first_name');
-                                $slug = self::generateSlug($authorfn, $state);
-                                $set('author_slug', $slug);
-                            })
-                            ->live()
                             ->maxLength(255),
-                        Forms\Components\TextInput::make('author_slug')
-                            ->label('Slug')
-                            ->required()
+
 
                     ])
                     ->columnSpan(1),

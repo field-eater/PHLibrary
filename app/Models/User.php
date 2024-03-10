@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Favorable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
@@ -10,7 +11,10 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Filament\Models\Contracts\HasName;
 use Filament\Panel;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -45,10 +49,16 @@ class User extends Authenticatable implements FilamentUser, HasName, HasAvatar, 
         'remember_token',
     ];
 
+    protected $cast = [
+        'is_admin' => 'boolean',
+    ];
+
     public function getRouteKeyName(): string
     {
         return 'user_name';
     }
+
+
 
     public function isActive()
     {
@@ -77,6 +87,13 @@ class User extends Authenticatable implements FilamentUser, HasName, HasAvatar, 
         return $this->HasMany(Borrow::class);
     }
 
+    public function favorites(): HasMany
+    {
+        return $this->HasMany(Favorite::class);
+
+    }
+
+
     public function student(): HasOne
     {
         return $this->hasOne(Student::class);
@@ -89,6 +106,11 @@ class User extends Authenticatable implements FilamentUser, HasName, HasAvatar, 
     public function getFilamentName(): string
     {
         return "{$this->first_name} {$this->last_name}";
+    }
+
+    public function books(): HasManyThrough
+    {
+        return $this->hasManyThrough(Book::class, Favorite::class);
     }
     /**
      * The attributes that should be cast.

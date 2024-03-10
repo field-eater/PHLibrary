@@ -35,8 +35,8 @@ class AdminPanelProvider extends PanelProvider
             ->emailVerification()
             ->passwordReset()
             ->profile(EditProfile::class)
-
-
+            ->brandLogo(asset('logos/logo-black.png'))
+            ->darkModeBrandLogo(asset('logos/logo-white.png'))
             ->colors([
                 'primary' => Color::Blue,
                 'slate' => Color::Slate,

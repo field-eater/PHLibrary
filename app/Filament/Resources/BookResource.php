@@ -71,13 +71,9 @@ class BookResource extends Resource
                             Forms\Components\TextInput::make('book_name')
                                 ->required()
                                 ->maxLength(255)
-                                ->live()
-                                ->afterStateUpdated(fn (Set $set, ?string $state) => $set('book_slug', Str::slug($state)))
-                                ->columnSpan(4),
-                            Forms\Components\TextInput::make('book_slug')
-                                ->columnSpan(2)
-                                ->disabled()
-                                ->required(),
+
+                                ->columnSpan(6),
+
                             Forms\Components\Select::make('publication_date')
                             ->options(function ()
                             {
@@ -111,13 +107,15 @@ class BookResource extends Resource
                         Forms\Components\Select::make('book_genre')
                         ->multiple()
                         ->preload()
+
                         ->required()
                         ->columnSpan(3)
                         ->relationship('genres', 'genre_title')
                         ->getOptionLabelFromRecordUsing(fn (Genre $record) => "{$record->genre_title}")
                         ->createOptionForm([
                             Forms\Components\TextInput::make('genre_title')
-                                ->required(),
+                                ->required()
+                                ->unique(),
                             Forms\Components\Textarea::make('genre_description')
                                 ->maxLength(65535)
                                 ->required(),
@@ -177,6 +175,7 @@ class BookResource extends Resource
                                     'loading' => 'lazy',
                                 ])
                                 ->grow(false),
+
                             Section::make(fn (Book $record):string => $record->book_name)
                                 ->description(function (Book $record):string {
                                     $author = Author::whereRelation('books', 'author_id', $record->author_id)->get(['author_first_name', 'author_last_name']);
@@ -192,31 +191,51 @@ class BookResource extends Resource
                                         ->color('info')
                                         ->badge()
                                         ->columnSpan(2),
-                                    TextEntry::make('rating')
-                                        ->color('gray')
-                                        ->weight('bold')
-                                        ->formatStateUsing(function ($record) {
-                                           $rating = Rating::whereBelongsTo($record)->avg('rating_score');
-                                           $numberOfRaters = Rating::whereBelongsTo($record)->count();
-                                           $roundedRating = round($rating, 2);
-                                           if ($rating)
-                                           {
-                                                return "{$roundedRating}/5 - {$numberOfRaters} Ratings" ;
-                                           }
-                                           return 'Not Rated';
+                                        InfoSplit::make([
+                                            TextEntry::make('rating')
+                                            ->color('gray')
 
-                                        })
-                                        ->columnSpan(1),
+                                            ->weight('bold')
+                                            ->formatStateUsing(function ($record) {
+                                               $rating = Rating::whereBelongsTo($record)->avg('rating_score');
+                                               $numberOfRaters = Rating::whereBelongsTo($record)->count();
+                                               $roundedRating = round($rating, 2);
+                                               if ($rating)
+                                               {
+                                                    return "{$roundedRating}/5 - {$numberOfRaters} Ratings" ;
+                                               }
+                                               return 'Not Rated';
+
+                                            })
+                                            ->columnSpan(1),
+                                            ImageEntry::make('favorites.user.avatar')
+                                            ->label('Favorited by:')
+                                            ->circular()
+                                            ->stacked()
+                                            ->limit(3)
+                                            ->visible(fn ($record):bool => $record->hasFavorites()),
+                                            TextEntry::make('created_at')
+                                            ->label('')
+                                            ->badge()
+                                            ->alignStart()
+                                            ->color('danger')
+                                            ->icon('heroicon-c-x-mark')
+                                            ->formatStateUsing(fn () => 'No favorites')
+                                            ->hidden(fn ($record):bool => $record->hasFavorites())
+
+                                        ]),
 
                                     TextEntry::make('book_details')
                                     ->columnSpan('full')
                                         ->label('Description')
                                         ->weight('light')
                                         ->color('gray'),
-                                    ])
+                                    ]),
 
                         ])->from('md'),
                         // Tinker with Split configurations later
+
+
 
 
                     ])->columnSpan(4),
@@ -270,17 +289,20 @@ class BookResource extends Resource
                 'md' => 2,
                 'xl' => 3,
             ])
+            ->paginated([3,9,27,54, 'all'])
+            ->defaultPaginationPageOption(9)
             ->columns([
                Split::make([
                     Tables\Columns\ImageColumn::make('book_image')
                     ->height(120)
                     ->grow(false),
+
                     Stack::make([
                     Tables\Columns\TextColumn::make('book_name')
                         ->weight('bold')
                         ->description(function (Book $record):string {
-                            $author = Author::whereRelation('books', 'author_id', $record->author_id)->get(['author_first_name', 'author_last_name']);
-                            $authorName = "{$author[0]['author_first_name']} {$author[0]['author_last_name']}";
+                            $author = Author::whereRelation('books', 'author_id', $record->author_id)->get(['author_first_name', 'author_last_name'])->first();
+                            $authorName = "{$author->author_first_name} {$author->author_last_name}";
                             return $authorName;
 
                         } )

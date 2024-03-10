@@ -32,10 +32,7 @@ class RecentBorrows extends Component implements HasTable, HasForms
 
     public ?Model $record;
 
-    // protected function paginateTableQuery(Builder $query): CursorPaginator
-    // {
-    //     return $query->cursorPaginate(($this->getTableRecordsPerPage() === 'all') ? $query->count() : $this->getTableRecordsPerPage());
-    // }
+
     public function table(Table $table): Table
     {
         return $table

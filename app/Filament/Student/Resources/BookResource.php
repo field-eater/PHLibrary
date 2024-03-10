@@ -12,10 +12,10 @@ use App\Models\BookCopy;
 use App\Models\Author;
 use App\Models\Book;
 use App\Models\Borrow;
+use App\Models\Favorite;
 use App\Models\Rating;
 use App\Models\Student;
 use Filament\Forms;
-
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Actions as InfoActions;
@@ -37,13 +37,16 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
+use Filament\Infolists\Components\Actions\Action;
+use Filament\Notifications\Notification;
 use Yepsua\Filament\Forms\Components\Rating as RatingField;
 
 class BookResource extends Resource
 {
     protected static ?string $model = Book::class;
+    protected static ?int $navigationSort = 1;
 
-    protected static ?string $navigationIcon = 'heroicon-o-book-open';
+    protected static ?string $navigationGroup = 'Library';
 
     public static function form(Form $form): Form
     {
@@ -60,6 +63,8 @@ class BookResource extends Resource
                 'md' => 2,
                 'xl' => 3,
             ])
+            ->defaultPaginationPageOption(9)
+            ->paginated([3,9,27,54, 'all'])
             ->columns([
                Split::make([
                     Tables\Columns\ImageColumn::make('book_image')
@@ -70,8 +75,8 @@ class BookResource extends Resource
 
                         ->weight('bold')
                         ->description(function (Book $record):string {
-                            $author = Author::whereRelation('books', 'author_id', $record->author_id)->get(['author_first_name', 'author_last_name']);
-                            $authorName = "{$author[0]['author_first_name']} {$author[0]['author_last_name']}";
+                            $author = Author::whereRelation('books', 'author_id', $record->author_id)->get(['author_first_name', 'author_last_name'])->first();
+                            $authorName = "{$author->author_first_name} {$author->author_last_name}";
                             return $authorName;
 
                         } )
@@ -87,16 +92,25 @@ class BookResource extends Resource
                         ->label('Rating')
                         ->sortable(),
                     ]),
+                    Stack::make([
+
                     Tables\Columns\TextColumn::make('bookcopies_count')
-                    ->counts([
-                        'bookcopies' => fn (Builder $query) => $query->where('status', BookCopyStatusEnum::Available)
-                    ])
-                    ->color(fn ($record) => BookCopy::whereBelongsTo($record)->where('status', BookCopyStatusEnum::Available)->count() !== 0 ? 'gray' : 'danger')
-                    ->badge()
-                    ->description('Copies', position: 'above')
-                    ->formatStateUsing(fn ($state, $record) => ($state > 0) ? "{$state}/{$record->available_copies}" : BookCopyStatusEnum::Unavailable)
-                    ->alignment('right'),
-               ])
+                        ->counts([
+                            'bookcopies' => fn (Builder $query) => $query->where('status', BookCopyStatusEnum::Available)
+                        ])
+                        ->color(fn ($record) => BookCopy::whereBelongsTo($record)->where('status', BookCopyStatusEnum::Available)->count() !== 0 ? 'gray' : 'danger')
+                        ->badge()
+                        ->description('Copies', position: 'above')
+                        ->formatStateUsing(fn ($state, $record) => ($state > 0) ? "{$state}/{$record->available_copies}" : BookCopyStatusEnum::Unavailable)
+                        ->alignRight(),
+
+
+                    ]),
+
+
+                ]),
+
+
             ])
             ->filters([
                 //
@@ -171,8 +185,44 @@ class BookResource extends Resource
                                     $author = Author::whereRelation('books', 'author_id', $record->author_id)->get(['author_first_name', 'author_last_name'])->first();
                                     $authorName = "{$author->author_first_name} {$author->author_last_name}";
                                     return "{$authorName}  •  {$record->publication_date}";
-                                }
-                                )
+                                })
+                                ->headerActions([
+                                    Action::make('Favorite')
+                                        ->iconButton()
+                                        ->action(function ($record) {
+                                            // ...
+                                            $user = Auth::user();
+                                                if ($record->isFavoritedBy($user))
+                                                {
+                                                    $record->getFavorited($user)->delete();
+
+                                                    Notification::make()
+                                                    ->title("{$record->book_name} removed from favorites")
+                                                    ->icon('heroicon-o-bookmark')
+                                                    ->danger()
+                                                    ->send();
+                                                }
+                                                else
+                                                {
+                                                    Favorite::create([
+                                                        'user_id' => $user->id,
+                                                        'favorable_type' => Book::class,
+                                                        'favorable_id' => $record->id,
+                                                    ]);
+
+
+                                                    Notification::make()
+                                                    ->title("{$record->book_name} added to favorites")
+                                                    ->icon('heroicon-o-bookmark')
+                                                    ->success()
+                                                    ->send();
+                                                }
+
+
+                                        })
+                                        // ->disabled(fn ($record):bool => $record->isFavoritedBy(Auth::user()))
+                                        ->icon(fn ($record) => ($record->isFavoritedBy(Auth::user())) ? 'heroicon-c-bookmark' : 'heroicon-o-bookmark'),
+                                ])
                                 ->schema([
                                     InfoSplit::make([
                                         TextEntry::make('genres.genre_title')
@@ -256,9 +306,27 @@ class BookResource extends Resource
                     ])->columnSpan(4),
                     InfoGrid::make(2)
                     ->schema([
+                        Section::make()
+                        ->schema([
+                            ImageEntry::make('favorites.user.avatar')
+                            ->label('Favorited by:')
+                            ->circular()
+                            ->stacked()
+                            ->limit(3)
+                            ->visible(fn ($record):bool => $record->hasFavorites()),
+                            TextEntry::make('created_at')
+                            ->alignCenter()
+                            ->weight('bold')
+                            ->size('lg')
+                            ->label('')
+                            ->formatStateUsing(fn () => 'No favorites')
+                            ->hidden(fn ($record):bool => $record->hasFavorites())
+                        ])
+                        ->columnSpanFull(),
 
 
                         Livewire::make(RecentBorrows::class)
+                        ->visible()
                             ->columnSpan(2),
 
                         ])

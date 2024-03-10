@@ -25,47 +25,6 @@ class ViewBook extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-
-            Actions\Action::make('Borrow')
-                ->icon('heroicon-m-hand-raised')
-                ->requiresConfirmation()
-                ->form([
-                    Select::make('user_id')
-                    ->label('Student Number')
-                    ->options(Student::all()->pluck('student_number', 'id')),
-                    DatePicker::make('date_borrowed')
-                    ->label('Borrow Date')
-                    ->before('tomorrow')
-                    ->required(),
-                ])
-                ->action(
-                    function ($record, array $data)
-                    {
-                        $bookCopies =  BookCopy::whereBelongsTo($record)->get();
-                        foreach($bookCopies as $copy)
-                        {
-                            if ($copy->status == BookCopyStatusEnum::Available)
-                            {
-                                $copy->status = BookCopyStatusEnum::Unavailable;
-                                $copy->save();
-                                Borrow::create([
-                                    'user_id' => $data['user_id'],
-                                    'date_borrowed' => $data['date_borrowed'],
-                                    'book_id' => $record->id,
-                                    'book_copy_id' => $copy->id,
-                                    'return_status' => BorrowStatusEnum::Pending,
-
-                                ]);
-                                return $data;
-                            }
-                        }
-
-                    })
-                ->outlined()
-                ->disabled(fn ($record): bool => (BookCopy::where('book_id', $record->id)->where('status', BookCopyStatusEnum::Available)->count() == 0)),
-
-
-           ActionGroup::make([
             Actions\EditAction::make()
             ->color('warning')
             ->outlined()
@@ -73,7 +32,7 @@ class ViewBook extends ViewRecord
             Actions\DeleteAction::make()
             ->icon('heroicon-o-trash')
             ->outlined(),
-           ])
+
         ];
     }
 
