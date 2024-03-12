@@ -18,6 +18,9 @@ return new class extends Migration
             $table->string('first_name');
             $table->string('last_name');
             $table->string('email')->unique();
+            $table->enum('gender',['male', 'female']);
+            $table->text('address');
+            $table->date('date_of_birth');
             $table->boolean('is_admin')->default(0);
             $table->boolean('is_activated')->default(1);
             $table->timestamp('email_verified_at')->nullable();

@@ -8,8 +8,11 @@ use App\Filament\Student\Resources\AuthorResource\RelationManagers\BooksRelation
 use App\Models\Author;
 use App\Models\Book;
 use App\Models\Favorite;
+use App\Models\Rating;
 use Filament\Forms;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\Actions;
 use Filament\Infolists\Components\Actions\Action;
 use Filament\Infolists\Components\Grid;
 use Filament\Infolists\Components\ImageEntry;
@@ -19,12 +22,17 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
 use Filament\Tables\Columns\Layout\Stack;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
+use Yepsua\Filament\Forms\Components\Rating as RatingField;
 
 class AuthorResource extends Resource
 {
@@ -34,6 +42,28 @@ class AuthorResource extends Resource
 
 
     protected static ?string $navigationGroup = 'Library';
+
+    protected static ?string $recordTitleAttribute = 'author_first_name';
+
+    public static function getGlobalSearchResultTitle(Model $record): string | Htmlable
+    {
+        return "{$record->author_first_name} {$record->author_last_name}";
+    }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['author_first_name', 'author_last_name', 'author_slug', 'genres.genre_title'];
+    }
+
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()->with('genres');
+    }
+
+    public static function getGlobalSearchResultUrl(Model $record): string
+    {
+        return AuthorResource::getUrl('view', ['record' => $record]);
+    }
 
 
     public static function form(Form $form): Form
@@ -88,6 +118,8 @@ class AuthorResource extends Resource
             ])
             ->filters([
                 //
+                Filter::make('favorites')
+                ->query(fn (Builder $query): Builder => $query->whereHas('favorites', fn ($query) => $query->where('user_id', Auth::id())))
             ])
             ->actions([
 
@@ -150,8 +182,61 @@ class AuthorResource extends Resource
                     ->icon(fn ($record) => ($record->isFavoritedBy(Auth::user())) ? 'heroicon-c-bookmark' : 'heroicon-o-bookmark'),
                 ])
                 ->schema([
+                    Split::make([
+                        TextEntry::make('ratings.id')
+                                    ->color('gray')
+                                    ->label('Rating')
+                                    ->weight('bold')
+                                    ->formatStateUsing(function ($record) {
+                                       $rating = $record->ratings->avg('rating_score');
+                                       $numberOfRaters = $record->ratings->count();
+                                       $roundedRating = round($rating, 2);
+                                       if ($rating)
+                                       {
+                                            return "{$roundedRating}/5 - {$numberOfRaters} Ratings" ;
+                                       }
+                                       return 'Not Rated';
+
+                                    })
+                                    ->columnSpan(1),
+
+                                Actions::make([
+                                    Action::make('Rate')
+                                    ->label('Rate')
+                                    ->icon('heroicon-m-star')
+                                    ->color('warning')
+                                    ->link()
+                                    ->modalWidth(MaxWidth::Small)
+                                    ->form([
+                                        RatingField::make('rating_score')
+                                        ->required()
+
+                                        ->label('Rating'),
+                                        Textarea::make('comment')
+                                        ->rows(10)
+                                        ->cols(5),
+                                    ])
+                                    ->action(function (array $data, $record)
+                                    {
+                                        $rating = Rating::create([
+                                            'user_id' => Auth::user()->id,
+                                            'rating_score' => $data['rating_score'],
+                                            'comment' => $data['comment'],
+                                        ]);
+                                        $record->ratings()->attach($rating);
+
+
+                                    }),
+                                ])
+                                ->alignment('end')
+                                ->columnSpan(1),
+                    ]),
+
+                    TextEntry::make('genres.genre_title')
+                    ->label('')
+                    ->separator(',')
+                    ->badge(),
                     TextEntry::make('author_details')
-                        ->label('')
                         ->prose(),
                 ]),
             ])

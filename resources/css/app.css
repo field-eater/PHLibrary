@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  @font-face {
+    font-family: 'Technology';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(/resources/assets/fonts/technology/Technology.ttf) format('ttf');
+
+    font-family: 'Bebas Neue';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(/resources/assets/fonts/Bebas_Neue/BebasNeue-Regular.ttf) format('ttf');
+  }
+}

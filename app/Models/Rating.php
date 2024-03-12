@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Rating extends Model
 {
@@ -16,13 +17,17 @@ class Rating extends Model
     [
         'rating_score',
         'user_id',
-        'book_id',
         'comment',
     ];
 
-    public function book(): BelongsTo
+    public function books(): BelongsToMany
     {
-        return $this->belongsTo(Book::class);
+        return $this->belongsToMany(Book::class, 'book_rating');
+    }
+
+    public function authors(): BelongsToMany
+    {
+        return $this->belongsToMany(Author::class, 'author_rating');
     }
 
 
@@ -30,6 +35,16 @@ class Rating extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function hasBook(): bool
+    {
+        return $this->whereHas('books')->exists();
+    }
+
+    public function hasAuthor(): bool
+    {
+        return $this->whereHas('authors')->exists();
     }
 
     protected $casts = [

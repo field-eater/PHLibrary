@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('students', function (Blueprint $table) {
+        Schema::create('admins', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnUpdate()->cascadeOnDelete();
-            $table->string('student_number');
-            $table->text('biography')->nullable();
-            $table->string('course');
-            $table->string('year_level');
-            $table->string('admission_year');
+            $table->enum('admin_role', ['library_staff','library_manager', 'super_admin']);
+            $table->boolean('can_view')->default(true);
+            $table->boolean('can_create')->default(true);
+            $table->boolean('can_update')->default(true);
+            $table->boolean('can_delete')->default(true);
             $table->timestamps();
         });
     }
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('students');
+        Schema::dropIfExists('admins');
     }
 };

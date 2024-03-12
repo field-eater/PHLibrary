@@ -18,6 +18,7 @@ use App\Models\Author;
 use App\Models\Book;
 use App\Models\Genre;
 use App\Models\User;
+use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Fieldset;
@@ -74,6 +75,14 @@ class UserResource extends Resource
                     ->required()
                     ->columnSpanFull()
                     ->maxLength(255),
+                Forms\Components\Select::make('gender')
+                    ->options([
+                        'male' => 'Male',
+                        'female' => 'Female',
+                    ]),
+                Forms\Components\DatePicker::make('date_of_birth')
+                    ->required(),
+
                 Forms\Components\ToggleButtons::make('is_admin')
                     ->inline()
                     ->boolean()
@@ -89,7 +98,6 @@ class UserResource extends Resource
     {
         return $infolist
             ->schema([
-
                     Grid::make(
                     [
                         'md' => 5,
@@ -132,19 +140,34 @@ class UserResource extends Resource
 
                             Section::make()
                             ->schema([
-                                TextEntry::make('student.date_of_birth')
+                                InfoSplit::make([
+                                    TextEntry::make('gender')
+                                        ->label('Gender')
+                                        ->badge()
+                                        ->icon('heroicon-c-user')
+                                        ->formatStateUsing(fn ($state) => ucwords($state)),
+                                    TextEntry::make('date_of_birth')
+                                        ->label('Age')
+                                        ->badge()
+                                        ->formatStateUsing(fn ($state) => Carbon::parse($state)->age),
+                                ]),
+                                TextEntry::make('date_of_birth')
                                     ->label('Date of Birth')
                                     ->icon('heroicon-c-calendar')
                                     ->date(),
-                                TextEntry::make('student.admission_year')
-                                    ->icon('heroicon-c-information-circle')
-                                    ->label('Year of Admission'),
+
+
+
+
 
 
                             ])->columnSpan(1)
                             ->hidden(fn ($record) => ($record->is_admin == true) ? true : false),
                             Section::make()
                             ->schema([
+                                TextEntry::make('student.admission_year')
+                                ->icon('heroicon-c-information-circle')
+                                ->label('Year of Admission'),
                                 TextEntry::make('student.course')
                                     ->label('Course and Year')
                                     ->badge()
@@ -168,11 +191,7 @@ class UserResource extends Resource
                                         }
 
                                     }),
-                                TextEntry::make('student.gender')
-                                    ->label('Gender')
-                                    ->badge()
-                                    ->icon('heroicon-c-user')
-                                    ->formatStateUsing(fn ($state) => ucwords($state)),
+
 
 
                             ])
@@ -186,7 +205,6 @@ class UserResource extends Resource
                             ->columnSpanFull(),
                             Tabs::make('Tables')
                             ->columnSpanFull()
-                            ->activeTab(3)
                             ->tabs([
                                 Tabs\Tab::make('Borrowed Books')
                                 ->icon('heroicon-c-book-open')
@@ -235,6 +253,7 @@ class UserResource extends Resource
                         ->hidden(fn ($record) => ($record->is_admin == true) ? true : false),
 
                     ]),
+
 
             ]);
     }

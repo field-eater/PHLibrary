@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\EditProfile;
 use App\Filament\Pages\Register;
+use App\Filament\Widgets\DateTimeWidget;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -37,6 +38,7 @@ class AdminPanelProvider extends PanelProvider
             ->profile(EditProfile::class)
             ->brandLogo(asset('logos/logo-black.png'))
             ->darkModeBrandLogo(asset('logos/logo-white.png'))
+            ->viteTheme('resources/css/filament/admin/theme.css')
             ->colors([
                 'primary' => Color::Blue,
                 'slate' => Color::Slate,
@@ -51,6 +53,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
+                DateTimeWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

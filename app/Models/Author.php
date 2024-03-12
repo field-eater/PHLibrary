@@ -6,6 +6,7 @@ use App\Traits\Favorable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Str;
@@ -32,6 +33,11 @@ class Author extends Model
     public function getRouteKeyName(): string
     {
         return 'author_slug';
+    }
+
+    public function ratings(): BelongsToMany
+    {
+        return $this->belongsToMany(Rating::class, 'author_rating');
     }
 
 

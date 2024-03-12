@@ -41,26 +41,23 @@ class StudentResource extends Resource
                     ->required()
                     ->unique(ignoreRecord: true)
                     ->maxLength(255)
-                    ->columnSpan(2),
-                Forms\Components\Select::make('gender')
-                    ->options([
-                        'male' => 'Male',
-                        'female' => 'Female',
-                    ]),
+                    ->columnSpan(3),
+
                 Forms\Components\TextInput::make('course')
                     ->required()
-                    ->columnSpan(2),
+                    ->columnSpan(1),
                 Forms\Components\TextInput::make('year_level')
                     ->numeric()
                     ->required()
-                    ->columnSpan(2),
+                    ->columnSpan(1),
                 Forms\Components\TextInput::make('admission_year')
                     ->required()
                     ->columnSpan(2),
+                Forms\Components\RichEditor::make('biography')
+                ->required()
+                ->columnSpanFull(),
 
-                Forms\Components\DatePicker::make('date_of_birth')
-                    ->required()
-                    ->columnSpan(2),
+
 
                 ]),
 
@@ -72,7 +69,7 @@ class StudentResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('user_id')
+                Tables\Columns\TextColumn::make('user.user_name')
                     ->badge()
 
                     ->label('User ID')
@@ -82,11 +79,6 @@ class StudentResource extends Resource
                 Tables\Columns\TextColumn::make('student_number')
                     ->wrapHeader()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('gender'),
-
-                Tables\Columns\TextColumn::make('date_of_birth')
-                    ->date()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('course')
                     ->wrapHeader()
                     ->alignEnd(),

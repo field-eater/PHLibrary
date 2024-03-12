@@ -37,10 +37,7 @@ class Genre extends Model
         return $this->belongsToMany(Author::class, 'author_genre');
     }
 
-    public function users()
-    {
-        return $this->belongsToMany(User::class, 'user_genre');
-    }
+
 
     public function genreTitle(): Attribute
     {

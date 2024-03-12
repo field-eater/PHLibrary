@@ -22,9 +22,7 @@ class RatingsRelationManager extends RelationManager
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('id')
-                    ->required()
-                    ->maxLength(255),
+
             ]);
     }
 
@@ -33,7 +31,7 @@ class RatingsRelationManager extends RelationManager
         return $table
         ->recordTitleAttribute('user_id')
         ->modifyQueryUsing(
-            fn(Builder $query) => $query->orderBy('created_at', 'desc')
+            fn(Builder $query) => $query->orderBy('ratings.created_at', 'desc')
         )
         ->contentGrid([
             'md' => 2,

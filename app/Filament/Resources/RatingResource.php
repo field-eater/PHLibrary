@@ -40,9 +40,7 @@ class RatingResource extends Resource
             Forms\Components\TextInput::make('user_id')
                 ->required()
                 ->numeric(),
-            Forms\Components\Select::make('book_id')
-                ->relationship('book', 'id')
-                ->required(),
+
             RatingStar::make('rating_score')->required(),
             Forms\Components\Textarea::make('comment')
                 ->maxLength(65535)
@@ -58,39 +56,39 @@ class RatingResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultGroup('book_id')
+            // ->defaultGroup('book_id')
             ->modifyQueryUsing(
                 fn(Builder $query) => $query->orderBy('created_at', 'desc')
             )
-            ->groups([
-                Group::make('book_id')
-                    ->collapsible()
-                    ->label('Book')
-                    ->getTitleFromRecordUsing(function (Rating $record) {
-                        $book = Book::find($record->book_id);
-                        return $book->book_name;
-                    })
-                    ->getDescriptionFromRecordUsing(function (Rating $record) {
-                        $book = Book::find($record->book_id);
-                        $author = Author::whereRelation(
-                            'books',
-                            'author_id',
-                            $book->author_id
-                        )->get(['author_first_name', 'author_last_name']);
-                        $authorName = "{$author[0]['author_first_name']} {$author[0]['author_last_name']}";
-                        $publication_date = $book->publication_date;
-                        return "{$authorName}  •  {$publication_date}";
-                    }),
-            ])
+            // ->groups([
+            //     Group::make('book_id')
+            //         ->collapsible()
+            //         ->label('Book')
+            //         ->getTitleFromRecordUsing(function (Rating $record) {
+            //             $book = Book::find($record->book_id);
+            //             return $book->book_name;
+            //         })
+            //         ->getDescriptionFromRecordUsing(function (Rating $record) {
+            //             $book = Book::find($record->book_id);
+            //             $author = Author::whereRelation(
+            //                 'books',
+            //                 'author_id',
+            //                 $book->author_id
+            //             )->get(['author_first_name', 'author_last_name']);
+            //             $authorName = "{$author[0]['author_first_name']} {$author[0]['author_last_name']}";
+            //             $publication_date = $book->publication_date;
+            //             return "{$authorName}  •  {$publication_date}";
+            //         }),
+            // ])
 
             ->columns([
-                Tables\Columns\TextColumn::make('book_id')
-                    ->label('Book')
-                    ->formatStateUsing(function ($state) {
-                        $book = Book::find($state);
-                        return $book->book_name;
-                    })
+                Tables\Columns\TextColumn::make('books.book_name')
+                    ->label('Books')
                     ->sortable(),
+                Tables\Columns\TextColumn::make('authors.id')
+                    ->formatStateUsing(fn (Author $author, $state) => $author->find($state)->getAuthorName())
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('user.user_name')
                     ->label('User Name')
                     ->alignment(Alignment::End)

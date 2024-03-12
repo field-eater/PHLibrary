@@ -15,8 +15,10 @@ use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
 
@@ -27,6 +29,26 @@ class GenreResource extends Resource
     protected static ?int $navigationSort = 3;
 
     protected static ?string $navigationGroup = 'Library';
+
+
+
+    protected static ?string $recordTitleAttribute = 'genre_title';
+
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['books.book_name', 'authors.author_first_name', 'authors.author_last_name', 'genre_title'];
+    }
+
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()->with(['books', 'authors']);
+    }
+
+    public static function getGlobalSearchResultUrl(Model $record): string
+    {
+        return GenreResource::getUrl('view', ['record' => $record]);
+    }
 
     public static function form(Form $form): Form
     {
@@ -83,11 +105,7 @@ class GenreResource extends Resource
                 Tables\Columns\TextColumn::make('genre_title')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('genre_description'),
-                Tables\Columns\ImageColumn::make('favorites.user.avatar')
-                ->label('Favorited by')
-                ->circular()
-                ->stacked()
-                ->limit(3),
+
 
             ])
             ->filters([
@@ -130,6 +148,10 @@ class GenreResource extends Resource
                                         // ->disabled(fn ($record):bool => $record->isFavoritedBy(Auth::user()))
                                         ->icon(fn ($record) => ($record->isFavoritedBy(Auth::user())) ? 'heroicon-c-bookmark' : 'heroicon-o-bookmark'),
             ])
+            ->filters([
+                Filter::make('favorites')
+                ->query(fn (Builder $query): Builder => $query->whereHas('favorites', fn ($query) => $query->where('user_id', Auth::id())))
+            ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
@@ -148,9 +170,7 @@ class GenreResource extends Resource
     {
         return [
             'index' => Pages\ListGenres::route('/'),
-            'create' => Pages\CreateGenre::route('/create'),
             'view' => Pages\ViewGenre::route('/{record}'),
-            'edit' => Pages\EditGenre::route('/{record}/edit'),
         ];
     }
 }

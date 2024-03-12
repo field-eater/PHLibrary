@@ -7,6 +7,7 @@ use App\Filament\Resources\AuthorResource\RelationManagers;
 use App\Filament\Resources\AuthorResource\RelationManagers\BooksRelationManager;
 use App\Models\Author;
 use App\Models\Book;
+use App\Models\Genre;
 use Filament\Actions\ViewAction;
 use Filament\Forms;
 use Filament\Forms\Components\Grid as FormGrid;
@@ -24,11 +25,13 @@ use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\Split;
 use Filament\Infolists\Components\Tabs;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\TextEntry\TextEntrySize;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
 use Filament\Tables\Columns\Layout\Stack;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -42,8 +45,10 @@ class AuthorResource extends Resource
     protected static ?string $navigationGroup = 'Book Management';
     protected static ?string $navigationParentItem = 'Books';
 
-    public static function generateSlug(string $field1Value, string $field2Value): string
-    {
+    public static function generateSlug(
+        string $field1Value,
+        string $field2Value
+    ): string {
         $slug = Str::slug($field1Value . '-' . $field2Value);
         return $slug;
     }
@@ -66,10 +71,27 @@ class AuthorResource extends Resource
                             ->label('Last Name')
                             ->required()
                             ->maxLength(255),
-
-
                     ])
                     ->columnSpan(1),
+
+                Forms\Components\Select::make('author_genre')
+                    ->multiple()
+                    ->preload()
+                    ->required()
+                    ->columnSpan(3)
+                    ->relationship('genres', 'genre_title')
+                    ->getOptionLabelFromRecordUsing(
+                        fn(Genre $record) => "{$record->genre_title}"
+                    )
+                    ->createOptionForm([
+                        Forms\Components\TextInput::make('genre_title')
+                            ->required()
+                            ->unique(),
+                        Forms\Components\Textarea::make('genre_description')
+                            ->maxLength(65535)
+                            ->required(),
+                    ]),
+
                 Forms\Components\Textarea::make('author_details')
                     ->label('Details')
                     ->required()
@@ -88,25 +110,72 @@ class AuthorResource extends Resource
                     ->label('')
                     ->height(300)
                     ->grow(false),
-                Section::make(
-                    fn(
-                        Author $record
-                    ): string => "{$record->author_first_name}  {$record->author_last_name}"
-                )->schema([
+                Section::make('')->schema([
+                    TextEntry::make('id')
+                        ->formatStateUsing(
+                            fn($record): string => $record->getAuthorName()
+                        )
+                        ->weight('bold')
+                        ->size(TextEntrySize::Large)
+                        ->extraAttributes([
+                            'class' => 'text-xl',
+                        ])
+                        ->label(''),
+                    TextEntry::make('ratings.id')
+                        ->color('gray')
+                        ->label('')
+                        ->weight('bold')
+                        ->formatStateUsing(function ($record) {
+                            $rating = $record->ratings->avg('rating_score');
+                            $numberOfRaters = $record->ratings->count();
+                            $roundedRating = round($rating, 2);
+                            if ($rating) {
+                                return "{$roundedRating}/5 - {$numberOfRaters} Ratings";
+                            }
+                            return 'Not Rated';
+                        })
+                        ->columnSpan(1),
+                    TextEntry::make('genres.genre_title')
+                        ->badge()
+                        ->label('')
+                        ->separator(','),
+
                     TextEntry::make('author_details')
                         ->label('')
                         ->prose(),
-                    Split::make([
-                        TextEntry::make('created_at')
-                            ->badge()
-                            ->color('gray')
-                            ->date(),
+                ]),
+                Section::make()
+                    ->schema([
+                        Split::make([
+                            TextEntry::make('created_at')
+                                ->badge()
+                                ->color('gray')
+                                ->date(),
+                            ImageEntry::make('favorites.user.avatar')
+                                ->label('Favorited by:')
+                                ->circular()
+                                ->stacked()
+                                ->limit(3)
+                                ->visible(
+                                    fn($record): bool => $record->hasFavorites()
+                                ),
+                            TextEntry::make('created_at')
+                                ->alignCenter()
+                                ->weight('bold')
+                                ->size('lg')
+                                ->label('')
+                                ->icon('heroicon-c-bookmark')
+                                ->formatStateUsing(fn() => 'No favorites')
+                                ->hidden(
+                                    fn($record): bool => $record->hasFavorites()
+                                ),
+                        ]),
                         TextEntry::make('updated_at')
                             ->badge()
                             ->color('gray')
                             ->since(),
-                    ]),
-                ]),
+                    ])
+                    ->columnSpan(1),
             ])
                 ->columnSpanFull()
                 ->from('md'),

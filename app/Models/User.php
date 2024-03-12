@@ -34,6 +34,9 @@ class User extends Authenticatable implements FilamentUser, HasName, HasAvatar, 
         'first_name',
         'last_name',
         'email',
+        'date_of_birth',
+        'gender',
+        'address',
         'is_admin',
         'is_activated',
         'password',
@@ -53,12 +56,40 @@ class User extends Authenticatable implements FilamentUser, HasName, HasAvatar, 
         'is_admin' => 'boolean',
     ];
 
+    /* ------ Relationships ------- */
+
+    public function books(): HasManyThrough
+    {
+        return $this->hasManyThrough(Book::class, Favorite::class);
+    }
+
+    public function borrows(): HasMany
+    {
+        return $this->HasMany(Borrow::class);
+    }
+
+    public function favorites(): HasMany
+    {
+        return $this->HasMany(Favorite::class);
+
+    }
+
+    public function student(): HasOne
+    {
+        return $this->hasOne(Student::class);
+    }
+
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(Rating::class);
+    }
+
+    /* -------- Methods --------- */
+
     public function getRouteKeyName(): string
     {
         return 'user_name';
     }
-
-
 
     public function isActive()
     {
@@ -82,36 +113,13 @@ class User extends Authenticatable implements FilamentUser, HasName, HasAvatar, 
         return $this->avatar;
     }
 
-    public function borrows(): HasMany
-    {
-        return $this->HasMany(Borrow::class);
-    }
 
-    public function favorites(): HasMany
-    {
-        return $this->HasMany(Favorite::class);
-
-    }
-
-
-    public function student(): HasOne
-    {
-        return $this->hasOne(Student::class);
-    }
-
-    public function ratings(): HasMany
-    {
-        return $this->hasMany(Rating::class);
-    }
     public function getFilamentName(): string
     {
         return "{$this->first_name} {$this->last_name}";
     }
 
-    public function books(): HasManyThrough
-    {
-        return $this->hasManyThrough(Book::class, Favorite::class);
-    }
+
     /**
      * The attributes that should be cast.
      *

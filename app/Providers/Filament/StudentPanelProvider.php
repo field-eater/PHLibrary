@@ -30,6 +30,7 @@ class StudentPanelProvider extends PanelProvider
         return $panel
             ->id('student')
             ->path('student')
+            ->breadcrumbs(false)
             ->brandLogo(asset('logos/logo-black.png'))
             ->darkModeBrandLogo(asset('logos/logo-white.png'))
             ->topNavigation()

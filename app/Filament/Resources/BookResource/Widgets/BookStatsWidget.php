@@ -5,6 +5,7 @@ namespace App\Filament\Resources\BookResource\Widgets;
 use App\Filament\Resources\BookResource\Pages\ListBooks;
 use App\Models\Book;
 use App\Models\BookCopy;
+use App\Models\Favorite;
 use App\Models\Rating;
 use Filament\Pages\Concerns\ExposesTableToWidgets;
 use Filament\Support\Enums\IconPosition;
@@ -21,6 +22,8 @@ class BookStatsWidget extends BaseWidget
 
     public Book $record;
     public BookCopy $bookCopy;
+
+    public Favorite $favorite;
 
     protected IconPosition | string | null $descriptionIconPosition = 'before';
     protected function getTablePage(): string
@@ -50,28 +53,28 @@ class BookStatsWidget extends BaseWidget
         $bookCopiesData = $bookCopy->map(fn (TrendValue $value) => $value->aggregate)->toArray();
 
 
-        $groupedRecords = Rating::groupBy('book_id')->get('book_id', 'rating_score');
+        // $groupedRecords = Rating::groupBy('book_id')->get('book_id', 'rating_score');
 
 
-        $averages = $groupedRecords->map(function ($group) {
-            $book_id = $group->book_id;
-            $average = Rating::where('book_id',$group->book_id)->groupBy('book_id')->avg('rating_score');
+        // $averages = $groupedRecords->map(function ($group) {
+        //     $book_id = $group->book_id;
+        //     $average = Rating::where('book_id',$group->book_id)->groupBy('book_id')->avg('rating_score');
 
-            return [
-                'book_id' => $book_id,
-                'average' => round($average,2),
-            ];
-        });
+        //     return [
+        //         'book_id' => $book_id,
+        //         'average' => round($average,2),
+        //     ];
+        // });
 
-        $highestRated = 'No ratings';
-        $bookName = "";
-        $description = '';
-        if (count($averages) > 0)
-        {
-            $highestRated = $averages->sortByDesc('average')->first();
-            $bookName = $this->record->find($highestRated['book_id'])->book_name;
-            $description = 'Highest Rated Book';
-        }
+        // $highestRated = 'No ratings';
+        // $bookName = "";
+        // $description = '';
+        // if (count($averages) > 0)
+        // {
+        //     $highestRated = $averages->sortByDesc('average')->first();
+        //     $bookName = $this->record->find($highestRated['book_id'])->book_name;
+        //     $description = 'Highest Rated Book';
+        // }
 
 
 
@@ -81,17 +84,17 @@ class BookStatsWidget extends BaseWidget
             Stat::make('Books', $this->getPageTableQuery()->count())
             ->color('primary')
             ->description('Total number of books')
-            ->descriptionIcon('heroicon-c-book-open')
+            ->descriptionIcon('heroicon-c-book-open', position: 'before')
             ->chart($booksData),
             Stat::make('Book Copies', $this->bookCopy->count())
             ->color('primary')
             ->description('Total number of book copies')
-            ->descriptionIcon('heroicon-c-document-duplicate')
+            ->descriptionIcon('heroicon-c-document-duplicate', position: 'before')
             ->chart($bookCopiesData),
-             Stat::make($bookName, (is_array($highestRated)) ? $highestRated['average']: $highestRated)
-            ->descriptionIcon('heroicon-c-arrow-up-circle')
+            Stat::make('Favorites', $this->favorite->where('favorable_type', Book::class)->count())
+            ->descriptionIcon('heroicon-c-bookmark', position: 'before')
             ->color('warning')
-            ->description($description),
+            ->description('Total number of favorites'),
 
 
         ];
@@ -101,6 +104,7 @@ class BookStatsWidget extends BaseWidget
     {
         $this->bookCopy = new BookCopy;
         $this->record = new Book;
+        $this->favorite = new Favorite;
     }
 
 

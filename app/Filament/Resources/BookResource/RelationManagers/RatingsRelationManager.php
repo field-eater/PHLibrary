@@ -40,7 +40,7 @@ class RatingsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('user_id')
             ->modifyQueryUsing(
-                fn(Builder $query) => $query->orderBy('created_at', 'desc')
+                fn(Builder $query) => $query->orderBy('ratings.created_at', 'desc')
             )
             ->contentGrid([
                 'md' => 2,

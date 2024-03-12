@@ -15,6 +15,7 @@ use App\Models\Borrow;
 use App\Models\Favorite;
 use App\Models\Rating;
 use App\Models\Student;
+use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Form;
@@ -39,6 +40,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
 use Filament\Infolists\Components\Actions\Action;
 use Filament\Notifications\Notification;
+use Filament\Tables\Filters\Filter;
+use Illuminate\Database\Eloquent\Model;
 use Yepsua\Filament\Forms\Components\Rating as RatingField;
 
 class BookResource extends Resource
@@ -46,7 +49,36 @@ class BookResource extends Resource
     protected static ?string $model = Book::class;
     protected static ?int $navigationSort = 1;
 
+    protected static ?string $recordTitleAttribute = 'book_name';
+
+
+
     protected static ?string $navigationGroup = 'Library';
+
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        return [
+            'Author' => $record->author->getAuthorName(),
+            'Publication Date' => $record->publication_date
+        ];
+    }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['book_name', 'book_slug', 'author.author_first_name', 'author.author_last_name', 'genres.genre_title'];
+    }
+
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()->with(['genres', 'author']);
+    }
+
+    public static function getGlobalSearchResultUrl(Model $record): string
+    {
+        return BookResource::getUrl('view', ['record' => $record]);
+    }
+
+
 
     public static function form(Form $form): Form
     {
@@ -82,7 +114,7 @@ class BookResource extends Resource
                         } )
                         ->searchable(),
 
-                    Tables\Columns\TextColumn::make('ratings_avg_rating_score')
+                    Tables\Columns\TextColumn::make('book.ratings_avg_rating_score')
                         ->avg('ratings', 'rating_score')
                         ->icon('heroicon-m-star')
                         ->color('warning')
@@ -114,6 +146,8 @@ class BookResource extends Resource
             ])
             ->filters([
                 //
+                Filter::make('favorites')
+                ->query(fn (Builder $query): Builder => $query->whereHas('favorites', fn ($query) => $query->where('user_id', Auth::id())))
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
@@ -249,8 +283,8 @@ class BookResource extends Resource
                                     ->color('gray')
                                     ->weight('bold')
                                     ->formatStateUsing(function ($record) {
-                                       $rating = Rating::whereBelongsTo($record)->avg('rating_score');
-                                       $numberOfRaters = Rating::whereBelongsTo($record)->count();
+                                       $rating = $record->ratings->avg('rating_score');
+                                       $numberOfRaters = $record->ratings->count();
                                        $roundedRating = round($rating, 2);
                                        if ($rating)
                                        {
@@ -279,13 +313,14 @@ class BookResource extends Resource
                                     ])
                                     ->action(function (array $data, $record)
                                     {
-                                        $rating = new Rating([
+                                        $rating = Rating::create([
                                             'user_id' => Auth::user()->id,
-                                            'book_id' => $record->id,
                                             'rating_score' => $data['rating_score'],
-                                            'comment' => $data['comment']
+                                            'comment' => $data['comment'],
                                         ]);
-                                        $rating->save();
+                                        $record->ratings()->attach($rating);
+
+
                                     }),
                                 ])
                                 ->alignment('end')
@@ -349,8 +384,8 @@ class BookResource extends Resource
     {
         return [
             'index' => Pages\ListBooks::route('/'),
-            'create' => Pages\CreateBook::route('/create'),
-            'edit' => Pages\EditBook::route('/{record}/edit'),
+
+
             'view' => Pages\ViewBook::route('/{record}'),
         ];
     }

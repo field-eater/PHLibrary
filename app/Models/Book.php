@@ -41,9 +41,9 @@ class Book extends Model
         return $this->hasMany(BookCopy::class);
     }
 
-    public function ratings(): HasMany
+    public function ratings(): BelongsToMany
     {
-        return $this->hasMany(Rating::class);
+        return $this->belongsToMany(Rating::class, 'book_rating');
     }
 
     public function genres(): BelongsToMany

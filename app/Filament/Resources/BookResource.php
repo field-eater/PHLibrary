@@ -26,6 +26,7 @@ use Filament\Infolists\Components\Actions\Action as InfoAction;
 use Filament\Infolists\Components\Grid as InfoGrid;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\Livewire;
+use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\Split as InfoSplit;
 use Filament\Infolists\Components\TextEntry;
@@ -35,8 +36,11 @@ use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
 use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\Layout\Stack;
+use Filament\Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint\Operators\IsRelatedToOperator;
 use Illuminate\Support\Str;
 use Filament\Tables\Filters\QueryBuilder;
+use Filament\Tables\Filters\QueryBuilder\Constraints\DateConstraint;
+use Filament\Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -197,8 +201,8 @@ class BookResource extends Resource
 
                                             ->weight('bold')
                                             ->formatStateUsing(function ($record) {
-                                               $rating = Rating::whereBelongsTo($record)->avg('rating_score');
-                                               $numberOfRaters = Rating::whereBelongsTo($record)->count();
+                                               $rating = $record->ratings->avg('rating_score');
+                                               $numberOfRaters = $record->ratings->count();
                                                $roundedRating = round($rating, 2);
                                                if ($rating)
                                                {
@@ -276,7 +280,8 @@ class BookResource extends Resource
 
                         ])
                         ->columnSpan(2)
-                ])
+                            ]),
+
 
             ])
             ;
@@ -331,14 +336,28 @@ class BookResource extends Resource
             ])
             ->filters([
                 // TODO: Add a filter for Genres
-                // QueryBuilder::make()
-                // ->constraints([
-                //     // ...
-                //     SelectConstraint::make('genres')
-                //         ->multiple() // Filter the `department` column on the `creator` relationship
-                //         ->options(Genre::all()->pluck('genre_title', 'id'))
-                // ]),
+                QueryBuilder::make()
+                ->constraints([
+                    // ...
+                    DateConstraint::make('publication_date'),
+                    RelationshipConstraint::make('genres') // Filter the `creator` relationship
+                    ->selectable(
+                        IsRelatedToOperator::make()
+                            ->titleAttribute('genre_title')
+                            ->searchable()
+                            ->multiple(),
+                    )
+                    ->icon('heroicon-c-rectangle-group'),
+                    RelationshipConstraint::make('author') // Filter the `creator` relationship
+                    ->selectable(
+                        IsRelatedToOperator::make()
+                            ->titleAttribute('genre_title')
+                            ->searchable(),
+                    )
+                    ->icon('heroicon-c-pencil')
+                ]),
             ])
+            ->filtersFormWidth(MaxWidth::Large)
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),

@@ -11,10 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('students', function (Blueprint $table) {
-            //
-            $table->enum('gender',['male', 'female'])->nullable()->after('admission_year');
-            $table->text('biography')->nullable()->after('date_of_birth');
+        //
+        Schema::create('author_genre', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('author_id')->constrained('authors')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignId('genre_id')->constrained('genres')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->timestamps();
         });
     }
 
@@ -23,8 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('students', function (Blueprint $table) {
-            //
-        });
+        //
     }
 };

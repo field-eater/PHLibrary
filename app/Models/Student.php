@@ -17,19 +17,12 @@ class Student extends Model
         //remove when student panel is made
         'user_id',
         'course',
-        'gender',
+        'biography',
         'admission_year',
         'year_level',
         'student_number',
-        'date_of_birth',
     ];
 
-    public function gender(): Attribute
-    {
-        return Attribute::make(
-            get: fn (string $state) => ucfirst($state),
-        );
-    }
 
 
     public function user(): BelongsTo
