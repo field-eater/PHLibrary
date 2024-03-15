@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\AuthorResource\Pages;
 use App\Filament\Resources\AuthorResource\RelationManagers;
 use App\Filament\Resources\AuthorResource\RelationManagers\BooksRelationManager;
+use App\Filament\Resources\AuthorResource\RelationManagers\RatingsRelationManager;
 use App\Models\Author;
 use App\Models\Book;
 use App\Models\Genre;
@@ -27,6 +28,7 @@ use Filament\Infolists\Components\Tabs;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\TextEntry\TextEntrySize;
 use Filament\Infolists\Infolist;
+use Filament\Resources\RelationManagers\RelationGroup;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
@@ -121,9 +123,16 @@ class AuthorResource extends Resource
                             'class' => 'text-xl',
                         ])
                         ->label(''),
+                    TextEntry::make('author_last_name')
+                        ->label('')
+                        ->color('')
+                        ->hidden(fn ($record):bool => ($record->ratings->count() > 0) ? true : false)
+                        ->formatStateUsing(fn () => 'Not Rated')
+                        ->icon('heroicon-c-x-circle'),
                     TextEntry::make('ratings.id')
                         ->color('gray')
                         ->label('')
+                        ->visible(fn ($record):bool => ($record->ratings->count() > 0) ? true : false)
                         ->weight('bold')
                         ->formatStateUsing(function ($record) {
                             $rating = $record->ratings->avg('rating_score');
@@ -133,6 +142,7 @@ class AuthorResource extends Resource
                                 return "{$roundedRating}/5 - {$numberOfRaters} Ratings";
                             }
                             return 'Not Rated';
+
                         })
                         ->columnSpan(1),
                     TextEntry::make('genres.genre_title')
@@ -227,7 +237,10 @@ class AuthorResource extends Resource
     {
         return [
             //
+
             BooksRelationManager::class,
+            RatingsRelationManager::class,
+
         ];
     }
 

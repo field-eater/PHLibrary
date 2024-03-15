@@ -15,6 +15,7 @@ use App\Models\Borrow;
 use App\Models\Favorite;
 use App\Models\Rating;
 use App\Models\Student;
+use App\Models\User;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\Textarea;
@@ -161,27 +162,46 @@ class BookResource extends Resource
                     ->required(),
                 ])
                 ->visible(fn ($record): bool => (BookCopy::whereBelongsTo($record)->where('status', BookCopyStatusEnum::Available)->count() > 0) ? true : false)
+                ->disabled(function ($record):bool {
+
+                $borrowCount = Borrow::whereBelongsTo($record)->whereBelongsTo(Auth::user())->where('return_status', BorrowStatusEnum::Pending)->count();
+                $copyCount = BookCopy::whereBelongsTo($record)->where('status', BookCopyStatusEnum::Available)->count();
+                if ($borrowCount >= $copyCount)
+                {
+                    return true;
+                }
+                return false;
+                })
                 ->action(
                     function ($record, array $data)
                     {
-
-                        $student = Student::whereBelongsTo(Auth::user())->first();
                         $bookCopies =  BookCopy::whereBelongsTo($record)->get();
+
                         foreach($bookCopies as $copy)
                         {
                             if ($copy->status == BookCopyStatusEnum::Available)
                             {
-                                $copy->status = BookCopyStatusEnum::Unavailable;
-                                $copy->save();
-                                Borrow::create([
-                                    'user_id' => $student->id,
-                                    'date_borrowed' => $data['date_borrowed'],
-                                    'book_id' => $record->id,
-                                    'book_copy_id' => $copy->id,
-                                    'return_status' => BorrowStatusEnum::Pending,
+                                $borrow = Borrow::whereBelongsTo(Auth::user())->where('book_copy_id', $copy->id)->where('return_status', BorrowStatusEnum::Pending);
+                                // dd($borrow);
+                                if (!$borrow->exists())
+                                {
+                                    Borrow::create([
+                                        'user_id' => Auth::user()->id,
+                                        'date_borrowed' => $data['date_borrowed'],
+                                        'book_id' => $record->id,
+                                        'book_copy_id' => $copy->id,
+                                        'return_status' => BorrowStatusEnum::Pending,
 
-                                ]);
-                                return $data;
+                                    ]);
+                                    Notification::make()
+                                    ->title('Borrow Request Sent')
+                                    ->body('You request has been sent to the admin. Please wait for the update to complete the borrow')
+                                    ->icon('heroicon-o-hand-raised')
+                                    ->iconColor('gray')
+                                    ->send();
+                                }
+
+
                             }
                         }
 
@@ -344,19 +364,37 @@ class BookResource extends Resource
                         Section::make()
                         ->schema([
                             ImageEntry::make('favorites.user.avatar')
-                            ->label('Favorited by:')
-                            ->circular()
-                            ->stacked()
-                            ->limit(3)
-                            ->visible(fn ($record):bool => $record->hasFavorites()),
+                                ->label('Favorited by:')
+                                ->circular()
+                                ->stacked()
+                                ->limit(3)
+                                ->columnSpan(1)
+                                ->visible(fn ($record):bool => $record->hasFavorites()),
                             TextEntry::make('created_at')
-                            ->alignCenter()
-                            ->weight('bold')
-                            ->size('lg')
-                            ->label('')
-                            ->formatStateUsing(fn () => 'No favorites')
-                            ->hidden(fn ($record):bool => $record->hasFavorites())
+                                ->alignCenter()
+                                ->weight('bold')
+                                ->size('lg')
+                                ->label('')
+                                ->columnSpan(1)
+                                ->formatStateUsing(fn () => 'No favorites')
+                                ->hidden(fn ($record):bool => $record->hasFavorites()),
+                            ImageEntry::make('bookqueues.user.avatar')
+                                ->label('Queued:')
+                                ->circular()
+                                ->stacked()
+                                ->limit(3)
+                                ->limitedRemainingText()
+                                ->columnSpan(1)
+                                ->visible(fn ($record):bool => $record->hasQueue()),
+                            TextEntry::make('updated_at')
+                                ->weight('bold')
+                                ->label('Queued:')
+                                ->size('lg')
+                                ->columnSpan(1)
+                                ->formatStateUsing(fn () => 'No queues')
+                                ->hidden(fn ($record):bool => $record->hasQueue()),
                         ])
+                        ->columns(2)
                         ->columnSpanFull(),
 
 

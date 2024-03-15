@@ -42,7 +42,9 @@ class BorrowResource extends Resource
 {
     protected static ?string $model = Borrow::class;
     protected static ?string $navigationIcon = 'heroicon-o-queue-list';
-    protected static ?string $navigationGroup = 'Book Management';
+    protected static ?string $navigationGroup = 'Borrow Management';
+
+    protected static ?int $navigationSort = 1;
 
     public static function getNavigationBadge(): ?string
     {
@@ -99,11 +101,11 @@ class BorrowResource extends Resource
             ->columns([
                 //
                 TextColumn::make('user.student.student_number')
+                    // ->formatStateUsing(fn ($state, Student $student) => $student->find($state)->first()->student_number)
                     ->searchable()
                     ->label('Student Number'),
                 TextColumn::make('book.book_name')
                     ->searchable()
-
                     ->description(
                         fn($record) => implode(
                             BookCopy::where('id', $record->book_copy_id)
@@ -154,6 +156,14 @@ class BorrowResource extends Resource
                     ->modalWidth('sm')
                     ->action(function ($record, array $data) {
                         $record->estimated_return_date = $data['estimated_return_date'];
+                        $bookCopies = BookCopy::whereBelongsTo($record->book_id);
+                        foreach ($bookCopies as $copy) {
+                            if ($copy->status == BookCopyStatusEnum::Available)
+                            {
+                                $copy->status = BookCopyStatusEnum::Unavailable;
+                                $copy->save();
+                            }
+                        }
                         $record->return_status = BorrowStatusEnum::Borrowed;
                         $record->save();
 

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\BookCopyStatusEnum;
+use App\Enums\BorrowStatusEnum;
 use App\Traits\Favorable;
 use Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Str;
 
@@ -36,14 +39,24 @@ class Book extends Model
     }
 
 
-    public function bookcopies()
+    public function bookcopies(): HasMany
     {
         return $this->hasMany(BookCopy::class);
     }
 
+    public function bookcopies_available()
+    {
+        return $this->hasMany(BookCopy::class)->where('status', BookCopyStatusEnum::Available);
+    }
+
+    public function bookcopies_unavailable()
+    {
+        return $this->hasMany(BookCopy::class)->where('status', BookCopyStatusEnum::Unavailable);
+    }
+
     public function ratings(): BelongsToMany
     {
-        return $this->belongsToMany(Rating::class, 'book_rating');
+        return $this->belongsToMany(Rating::class, 'rating_book');
     }
 
     public function genres(): BelongsToMany
@@ -56,12 +69,15 @@ class Book extends Model
         return $this->belongsTo(Author::class);
     }
 
+    public function bookqueues(): HasMany
+    {
+        return $this->hasMany(BookQueue::class);
+    }
+
     public function borrows(): HasMany
     {
         return $this->HasMany(Borrow::class);
     }
-
-
 
 
 
@@ -70,12 +86,19 @@ class Book extends Model
         return $borrow->whereBelongsTo(self::class)->desc()->first();
     }
 
+    public function hasQueue()
+    {
+        $this->load('bookqueues');
 
-
-
-
-
-
+        if (!$this->relationLoaded('bookqueues')) {
+            return false;
+        }
+        if (!empty($this->bookqueues))
+        {
+            return true;
+        }
+        return false;
+    }
 
     protected static function boot()
     {

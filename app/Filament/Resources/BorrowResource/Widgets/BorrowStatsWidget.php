@@ -30,10 +30,17 @@ class BorrowStatsWidget extends BaseWidget
     }
     protected function getStats(): array
     {
-        $books = Borrow::all()->groupBy('book_id')->map->count()->sortDesc();
-        $mostBorrowedID = $books->keys()->first();
+        $pendingsData  = Trend::query(Borrow::query()->where('return_status', BorrowStatusEnum::Pending))
+        ->between(
+            start: now()->startOfYear(),
+            end: now()->endOfYear(),
+        )
+        ->perMonth()
+        ->count();
 
-        $mostBorrowedBook = Book::find($mostBorrowedID)->book_name;
+        $pendingsData = $pendingsData->map(fn (TrendValue $value) => $value->aggregate)->toArray();
+
+
 
         $borrowsData = Trend::query(Borrow::query()->where('return_status', BorrowStatusEnum::Borrowed))
         ->between(
@@ -45,22 +52,17 @@ class BorrowStatsWidget extends BaseWidget
 
         $borrowsData = $borrowsData->map(fn (TrendValue $value) => $value->aggregate)->toArray();
 
-        $borrowedBookData = Trend::query(Borrow::query()->where('book_id', $mostBorrowedID))
-        ->between(
-            start: now()->startOfYear(),
-            end: now()->endOfYear(),
-        )
-        ->perMonth()
-        ->count();
 
-        $borrowedBookData = $borrowedBookData->map(fn (TrendValue $value) => $value->aggregate)->toArray();
+
+
 
 
         return [
             //
-            Stat::make('Most Borrowed Book', $mostBorrowedBook)
+            Stat::make('Borrow Requests', $this->borrow->where('return_status', BorrowStatusEnum::Pending)->count())
             ->color('primary')
-            ->chart($borrowedBookData),
+            ->description('Total number of requests')
+            ->chart($pendingsData),
             Stat::make('Borrows', $this->borrow->where('return_status', BorrowStatusEnum::Borrowed)->count())
             ->chart($borrowsData)
             ->description('Total number of borrows'),

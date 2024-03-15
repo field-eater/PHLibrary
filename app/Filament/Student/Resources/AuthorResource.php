@@ -2,6 +2,7 @@
 
 namespace App\Filament\Student\Resources;
 
+use App\Filament\Resources\AuthorResource\RelationManagers\RatingsRelationManager;
 use App\Filament\Student\Resources\AuthorResource\Pages;
 use App\Filament\Student\Resources\AuthorResource\RelationManagers;
 use App\Filament\Student\Resources\AuthorResource\RelationManagers\BooksRelationManager;
@@ -183,22 +184,28 @@ class AuthorResource extends Resource
                 ])
                 ->schema([
                     Split::make([
+                        TextEntry::make('author_last_name')
+                        ->label('')
+                        ->color('')
+                        ->hidden(fn ($record):bool => ($record->ratings->count() > 0) ? true : false)
+                        ->formatStateUsing(fn () => 'Not Rated')
+                        ->icon('heroicon-c-x-circle'),
                         TextEntry::make('ratings.id')
-                                    ->color('gray')
-                                    ->label('Rating')
-                                    ->weight('bold')
-                                    ->formatStateUsing(function ($record) {
-                                       $rating = $record->ratings->avg('rating_score');
-                                       $numberOfRaters = $record->ratings->count();
-                                       $roundedRating = round($rating, 2);
-                                       if ($rating)
-                                       {
-                                            return "{$roundedRating}/5 - {$numberOfRaters} Ratings" ;
-                                       }
-                                       return 'Not Rated';
+                            ->color('gray')
+                            ->label('')
+                            ->visible(fn ($record):bool => ($record->ratings->count() > 0) ? true : false)
+                            ->weight('bold')
+                            ->formatStateUsing(function ($record) {
+                                $rating = $record->ratings->avg('rating_score');
+                                $numberOfRaters = $record->ratings->count();
+                                $roundedRating = round($rating, 2);
+                                if ($rating) {
+                                    return "{$roundedRating}/5 - {$numberOfRaters} Ratings";
+                                }
+                                return 'Not Rated';
 
-                                    })
-                                    ->columnSpan(1),
+                            })
+                            ->columnSpan(1),
 
                                 Actions::make([
                                     Action::make('Rate')
@@ -269,6 +276,7 @@ class AuthorResource extends Resource
         return [
             //
             BooksRelationManager::class,
+            RatingsRelationManager::class,
         ];
     }
 

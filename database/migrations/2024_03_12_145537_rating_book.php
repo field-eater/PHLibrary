@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         //
-        Schema::create('author_rating', function (Blueprint $table) {
+        Schema::create('rating_book', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('author_id')->constrained('authors')->cascadeOnUpdate()->cascadeOnDelete();
+            $table->foreignId('book_id')->constrained('books')->cascadeOnUpdate()->cascadeOnDelete();
             $table->foreignId('rating_id')->constrained('ratings')->cascadeOnUpdate()->cascadeOnDelete();
             $table->timestamps();
         });
@@ -26,6 +26,6 @@ return new class extends Migration
     public function down(): void
     {
         //
-        Schema::dropIfExists('author_rating');
+        Schema::dropIfExists('rating_book');
     }
 };

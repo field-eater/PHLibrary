@@ -22,12 +22,12 @@ class Rating extends Model
 
     public function books(): BelongsToMany
     {
-        return $this->belongsToMany(Book::class, 'book_rating');
+        return $this->belongsToMany(Book::class, 'rating_book');
     }
 
     public function authors(): BelongsToMany
     {
-        return $this->belongsToMany(Author::class, 'author_rating');
+        return $this->belongsToMany(Author::class, 'rating_author');
     }
 
 

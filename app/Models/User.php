@@ -74,6 +74,11 @@ class User extends Authenticatable implements FilamentUser, HasName, HasAvatar, 
 
     }
 
+    public function bookqueue(): HasOne
+    {
+        return $this->hasOne(BookQueue::class);
+    }
+
     public function student(): HasOne
     {
         return $this->hasOne(Student::class);

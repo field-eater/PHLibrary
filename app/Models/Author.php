@@ -37,7 +37,7 @@ class Author extends Model
 
     public function ratings(): BelongsToMany
     {
-        return $this->belongsToMany(Rating::class, 'author_rating');
+        return $this->belongsToMany(Rating::class, 'rating_author');
     }
 
 

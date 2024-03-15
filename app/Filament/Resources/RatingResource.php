@@ -60,26 +60,27 @@ class RatingResource extends Resource
             ->modifyQueryUsing(
                 fn(Builder $query) => $query->orderBy('created_at', 'desc')
             )
-            // ->groups([
-            //     Group::make('book_id')
-            //         ->collapsible()
-            //         ->label('Book')
-            //         ->getTitleFromRecordUsing(function (Rating $record) {
-            //             $book = Book::find($record->book_id);
-            //             return $book->book_name;
-            //         })
-            //         ->getDescriptionFromRecordUsing(function (Rating $record) {
-            //             $book = Book::find($record->book_id);
-            //             $author = Author::whereRelation(
-            //                 'books',
-            //                 'author_id',
-            //                 $book->author_id
-            //             )->get(['author_first_name', 'author_last_name']);
-            //             $authorName = "{$author[0]['author_first_name']} {$author[0]['author_last_name']}";
-            //             $publication_date = $book->publication_date;
-            //             return "{$authorName}  •  {$publication_date}";
-            //         }),
-            // ])
+            ->groups([
+                Group::make('books.id')
+                    ->collapsible()
+                    ->label('Book')
+                    ->getTitleFromRecordUsing(function (Rating $record) {
+                        dd($record->books_rating);
+                        $book = Book::find($record->books->id);
+                        return $book->book_name;
+                    })
+                    ->getDescriptionFromRecordUsing(function (Rating $record) {
+                        $book = Book::find($record->books->book_id);
+                        $author = Author::whereRelation(
+                            'books',
+                            'author_id',
+                            $book->author_id
+                        )->get(['author_first_name', 'author_last_name']);
+                        $authorName = "{$author[0]['author_first_name']} {$author[0]['author_last_name']}";
+                        $publication_date = $book->publication_date;
+                        return "{$authorName}  •  {$publication_date}";
+                    }),
+            ])
 
             ->columns([
                 Tables\Columns\TextColumn::make('books.book_name')

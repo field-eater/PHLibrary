@@ -11,10 +11,7 @@ class ViewAuthor extends ViewRecord
 {
     protected static string $resource = AuthorResource::class;
 
-    public function getContentTabLabel(): ?string
-    {
-        return 'try';
-    }
+
 
     protected function getHeaderActions(): array
     {
