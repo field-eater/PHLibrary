@@ -6,6 +6,7 @@ use App\Traits\Favorable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
@@ -37,8 +38,15 @@ class Author extends Model
 
     public function ratings(): BelongsToMany
     {
-        return $this->belongsToMany(Rating::class, 'rating_author');
+        return $this->belongsToMany(Rating::class, 'rating_author')->withPivot(['author_id','rating_id']);
     }
+
+    public function getRatings(): BelongsToMany
+    {
+        return $this->belongsToMany(Rating::class, 'ratings_author')->withPivot('rating_id');
+    }
+
+
 
 
 

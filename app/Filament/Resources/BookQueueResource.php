@@ -31,15 +31,18 @@ class BookQueueResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Select::make('user_id')
-                    ->relationship('user', 'id')
+                    ->relationship('user', 'user_name')
                     ->required(),
                 Forms\Components\Select::make('book_id')
-                    ->relationship('book', 'id')
+                    ->relationship('book', 'book_name')
                     ->required(),
                 Forms\Components\TextInput::make('position')
                     ->required()
+                    ->disabledOn('edit')
                     ->numeric(),
                 Forms\Components\DateTimePicker::make('requested_at')
+                    ->after('today')
+                    ->disabledOn('edit')
                     ->required(),
             ]);
     }
@@ -54,6 +57,11 @@ class BookQueueResource extends Resource
         ])
             ->columns([
             Split::make([
+                Tables\Columns\TextColumn::make('position')
+                ->numeric()
+                ->badge()
+                ->grow(false)
+                ->sortable(),
                 Tables\Columns\ImageColumn::make('book.book_image')
                     ->height(120)
                     ->grow(false),
@@ -83,10 +91,7 @@ class BookQueueResource extends Resource
                 ]),
 
 
-                Tables\Columns\TextColumn::make('position')
-                    ->numeric()
-                    ->badge()
-                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('requested_at')
                     ->date()
                     ->sortable(),
@@ -96,8 +101,7 @@ class BookQueueResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -117,9 +121,9 @@ class BookQueueResource extends Resource
     {
         return [
             'index' => Pages\ListBookQueues::route('/'),
-            'create' => Pages\CreateBookQueue::route('/create'),
-            'view' => Pages\ViewBookQueue::route('/{record}'),
-            'edit' => Pages\EditBookQueue::route('/{record}/edit'),
+            // 'create' => Pages\CreateBookQueue::route('/create'),
+            // 'view' => Pages\ViewBookQueue::route('/{record}'),
+            // 'edit' => Pages\EditBookQueue::route('/{record}/edit'),
         ];
     }
 }

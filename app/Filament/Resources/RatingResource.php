@@ -83,13 +83,29 @@ class RatingResource extends Resource
             ])
 
             ->columns([
-                Tables\Columns\TextColumn::make('books.book_name')
-                    ->label('Books')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('authors.id')
-                    ->formatStateUsing(fn (Author $author, $state) => $author->find($state)->getAuthorName())
-                    ->sortable(),
+                Tables\Columns\TextColumn::make('id')
+                ->formatStateUsing(function ($state, $record)
+                {
+                    if ($record->has('books')->exists())
+                    {
+                        $book = Book::whereHas('ratings', function ($q) use ($state){
+                            $q->where('rating_id', $state);
+                           }
+                           )->first();
+                        return $book->book_name;
+                    }
+                    else if ($record->has('authors')->exists())
+                    {
+                       $author = Author::whereHas('ratings', function ($q) use ($state){
+                        $q->where('rating_id', $state);
+                       }
+                       )->first();
 
+                        return $author->author_first_name.' '.$author->author_last_name;
+                    }
+                })
+                    ->label('Title')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('user.user_name')
                     ->label('User Name')
                     ->alignment(Alignment::End)

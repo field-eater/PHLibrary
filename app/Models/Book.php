@@ -56,7 +56,7 @@ class Book extends Model
 
     public function ratings(): BelongsToMany
     {
-        return $this->belongsToMany(Rating::class, 'rating_book');
+        return $this->belongsToMany(Rating::class, 'rating_book')->withPivot(['book_id','rating_id']);
     }
 
     public function genres(): BelongsToMany
