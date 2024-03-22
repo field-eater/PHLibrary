@@ -4,6 +4,8 @@ namespace App\Filament\Resources\RatingResource\Pages;
 
 use App\Filament\Resources\RatingResource;
 use App\Filament\Resources\RatingsResource\Widgets\RatingStatsWidget;
+use App\Models\Author;
+use App\Models\Book;
 use App\Models\Rating;
 use Filament\Actions;
 use Filament\Pages\Concerns\ExposesTableToWidgets;
@@ -28,16 +30,15 @@ class ListRatings extends ListRecords
     {
         return [
             'all' => Tab::make()
-
                 ->badge(Rating::all()->count()),
             'books' => Tab::make()
                 ->icon('heroicon-c-book-open')
                 ->badge(Rating::has('books')->count())
-                ->modifyQueryUsing(fn (Builder $query) => $query->whereHas('books')),
+                ->modifyQueryUsing(fn (Builder $query) => $query->has('books')),
             'authors' => Tab::make()
                 ->icon('heroicon-c-pencil')
                 ->badge(Rating::has('authors')->count())
-                ->modifyQueryUsing(fn (Builder $query) => $query->whereHas('authors')),
+                ->modifyQueryUsing(fn (Builder $query) => $query->has('authors')),
         ];
     }
     protected function getHeaderActions(): array

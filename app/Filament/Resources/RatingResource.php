@@ -15,6 +15,7 @@ use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\Alignment;
 use Filament\Tables;
+use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\Layout\Grid;
 use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\Summarizers\Average;
@@ -22,7 +23,9 @@ use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\DB;
 use Yepsua\Filament\Forms\Components\Rating as RatingStar;
 use Yepsua\Filament\Tables\Components\RatingColumn;
 
@@ -56,6 +59,7 @@ class RatingResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+
             // ->defaultGroup('book_id')
             ->modifyQueryUsing(
                 fn(Builder $query) => $query->orderBy('created_at', 'desc')
@@ -63,49 +67,30 @@ class RatingResource extends Resource
             ->groups([
                 Group::make('books.id')
                     ->collapsible()
-                    ->label('Book')
-                    ->getTitleFromRecordUsing(function (Rating $record) {
-                        dd($record->books_rating);
-                        $book = Book::find($record->books->id);
-                        return $book->book_name;
-                    })
-                    ->getDescriptionFromRecordUsing(function (Rating $record) {
-                        $book = Book::find($record->books->book_id);
-                        $author = Author::whereRelation(
-                            'books',
-                            'author_id',
-                            $book->author_id
-                        )->get(['author_first_name', 'author_last_name']);
-                        $authorName = "{$author[0]['author_first_name']} {$author[0]['author_last_name']}";
-                        $publication_date = $book->publication_date;
-                        return "{$authorName}  •  {$publication_date}";
-                    }),
+                    ->label('Book'),
             ])
 
             ->columns([
-                Tables\Columns\TextColumn::make('id')
-                ->formatStateUsing(function ($state, $record)
-                {
-                    if ($record->has('books')->exists())
-                    {
-                        $book = Book::whereHas('ratings', function ($q) use ($state){
-                            $q->where('rating_id', $state);
-                           }
-                           )->first();
-                        return $book->book_name;
-                    }
-                    else if ($record->has('authors')->exists())
-                    {
-                       $author = Author::whereHas('ratings', function ($q) use ($state){
-                        $q->where('rating_id', $state);
-                       }
-                       )->first();
 
-                        return $author->author_first_name.' '.$author->author_last_name;
+
+                Tables\Columns\TextColumn::make('id')
+                ->label('Rated Title')
+                ->formatStateUsing(
+                    function ($state) {
+                        $rating = DB::table('rateables')->select('rateable_type', 'rateable_id')->where('rating_id', $state)->first();
+                        if($rating->rateable_type == Book::class)
+                        {
+                            return Book::find($rating->rateable_id)->book_name;
+                        }
+                        else if($rating->rateable_type == Author::class)
+                        {
+                            $author = Author::find($rating->rateable_id)->get(['author_first_name', 'author_last_name'])->first();
+                            return "{$author->author_first_name} {$author->author_last_name}";
+                        }
+
                     }
-                })
-                    ->label('Title')
-                    ->sortable(),
+                ),
+
                 Tables\Columns\TextColumn::make('user.user_name')
                     ->label('User Name')
                     ->alignment(Alignment::End)

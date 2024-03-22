@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\BookCopyStatusEnum;
 use App\Enums\BorrowStatusEnum;
 use App\Traits\Favorable;
+use App\Traits\Rateable;
 use Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,6 +20,7 @@ class Book extends Model
 {
     use HasFactory;
     use Favorable;
+    use Rateable;
 
 
     protected $fillable = [
@@ -54,10 +56,7 @@ class Book extends Model
         return $this->hasMany(BookCopy::class)->where('status', BookCopyStatusEnum::Unavailable);
     }
 
-    public function ratings(): BelongsToMany
-    {
-        return $this->belongsToMany(Rating::class, 'rating_book')->withPivot(['book_id','rating_id']);
-    }
+
 
     public function genres(): BelongsToMany
     {

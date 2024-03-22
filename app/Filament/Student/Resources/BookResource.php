@@ -304,10 +304,11 @@ class BookResource extends Resource
                                     ->weight('bold')
                                     ->formatStateUsing(function ($record) {
                                        $rating = $record->ratings->avg('rating_score');
-                                       $numberOfRaters = $record->ratings->count();
-                                       $roundedRating = round($rating, 2);
+                                       $numberOfRaters =  $record->ratings->count();
+
                                        if ($rating)
                                        {
+                                            $roundedRating = round($rating, 2);
                                             return "{$roundedRating}/5 - {$numberOfRaters} Ratings" ;
                                        }
                                        return 'Not Rated';
@@ -338,7 +339,15 @@ class BookResource extends Resource
                                             'rating_score' => $data['rating_score'],
                                             'comment' => $data['comment'],
                                         ]);
+                                        $score = $data['rating_score'];
+
                                         $record->ratings()->attach($rating);
+
+                                        Notification::make()
+                                        ->title("{$record->book_name} rated with {$score} stars")
+                                        ->icon('heroicon-c-star')
+                                        ->warning()
+                                        ->send();
 
 
                                     }),

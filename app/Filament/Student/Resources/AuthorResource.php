@@ -227,10 +227,19 @@ class AuthorResource extends Resource
                                     {
                                         $rating = Rating::create([
                                             'user_id' => Auth::user()->id,
+
                                             'rating_score' => $data['rating_score'],
                                             'comment' => $data['comment'],
                                         ]);
                                         $record->ratings()->attach($rating);
+
+                                        $score = $data['rating_score'];
+
+                                        Notification::make()
+                                        ->title("{$record->getAuthorName()} rated with {$score} stars")
+                                        ->icon('heroicon-c-star')
+                                        ->warning()
+                                        ->send();
 
 
                                     }),

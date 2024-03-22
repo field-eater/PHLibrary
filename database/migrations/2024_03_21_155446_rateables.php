@@ -12,11 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         //
-        Schema::create('rating_author', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('author_id')->constrained('authors')->cascadeOnUpdate()->cascadeOnDelete();
+        Schema::create('rateables', function (Blueprint $table) {
+
             $table->foreignId('rating_id')->constrained('ratings')->cascadeOnUpdate()->cascadeOnDelete();
-            $table->timestamps();
+            $table->morphs('rateable');
         });
     }
 
@@ -25,7 +24,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
-        Schema::dropIfExists('rating_author');
+        Schema::dropIfExists('rateables');
+
     }
 };

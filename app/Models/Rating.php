@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class Rating extends Model
 {
@@ -20,27 +22,20 @@ class Rating extends Model
         'comment',
     ];
 
-    public function books(): BelongsToMany
+    public function books(): MorphToMany
     {
-        return $this->belongsToMany(Book::class, 'rating_book')->withPivot(['book_id','rating_id']);
+        return $this->morphedByMany(Book::class, 'rateable')->withPivot('rateable_id');
     }
 
-    // public function book(): BelongsTo
-    // {
-    //     return $this->belongsTo(Book::class);
-    // }
-
-    public function authors(): BelongsToMany
+    public function rateable()
     {
-        return $this->belongsToMany(Author::class, 'rating_author')->withPivot(['author_id','rating_id']);
+        return $this->morphTo;
     }
 
-    // public function author(): BelongsTo
-    // {
-    //     return $this->belongsTo(Author::class);
-    // }
-
-
+    public function authors(): MorphToMany
+    {
+        return $this->morphedByMany(Author::class, 'rateable')->withPivot('rateable_id');
+    }
 
     public function user(): BelongsTo
     {

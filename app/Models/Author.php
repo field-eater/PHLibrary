@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\Favorable;
+use App\Traits\Rateable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,6 +17,7 @@ class Author extends Model
 {
     use HasFactory;
     use Favorable;
+    use Rateable;
 
     protected $fillable = [
         'author_image',
@@ -36,15 +38,6 @@ class Author extends Model
         return 'author_slug';
     }
 
-    public function ratings(): BelongsToMany
-    {
-        return $this->belongsToMany(Rating::class, 'rating_author')->withPivot(['author_id','rating_id']);
-    }
-
-    public function getRatings(): BelongsToMany
-    {
-        return $this->belongsToMany(Rating::class, 'ratings_author')->withPivot('rating_id');
-    }
 
 
 

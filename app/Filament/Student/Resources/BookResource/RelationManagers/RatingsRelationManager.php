@@ -30,9 +30,9 @@ class RatingsRelationManager extends RelationManager
     {
         return $table
         ->recordTitleAttribute('user_id')
-        ->modifyQueryUsing(
-            fn(Builder $query) => $query->orderBy('ratings.created_at', 'desc')
-        )
+        // ->modifyQueryUsing(
+        //     fn(Builder $query) => $query->orderBy('created_at', 'desc')
+        // )
         ->contentGrid([
             'md' => 2,
             'xl' => 3,
@@ -85,16 +85,13 @@ class RatingsRelationManager extends RelationManager
             ]),
         ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+
             ]);
     }
 }
