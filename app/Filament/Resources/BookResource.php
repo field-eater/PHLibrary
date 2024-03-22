@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Enums\BookCopyStatusEnum;
 use App\Enums\BorrowStatusEnum;
+use App\Livewire\ListBookQueueButton;
 use App\Filament\Resources\BookResource\Pages;
 use App\Filament\Resources\BookResource\RelationManagers\RatingsRelationManager;
 use App\Filament\Resources\BookResource\Widgets\BookStatsWidget;
@@ -171,19 +172,25 @@ class BookResource extends Resource
                     Section::make('')
                     ->schema([
                         InfoSplit::make([
-                            ImageEntry::make('book_image')
+
+                               InfoGrid::make(1)
+                               ->schema([
+                                ImageEntry::make('book_image')
                                 ->label('')
                                 ->height(350)
                                 ->extraImgAttributes([
                                     'alt' => 'Book Image',
                                     'loading' => 'lazy',
                                 ])
-                                ->grow(false),
+                                ->grow(false)
+                                ->columnSpanFull(),
+                                Livewire::make(ListBookQueueButton::class),
+                               ])->grow(false),
 
                             Section::make(fn (Book $record):string => $record->book_name)
                                 ->description(function (Book $record):string {
-                                    $author = Author::whereRelation('books', 'author_id', $record->author_id)->get(['author_first_name', 'author_last_name']);
-                                    $authorName = "{$author[0]['author_first_name']} {$author[0]['author_last_name']}";
+                                    $author = Author::whereRelation('books', 'author_id', $record->author_id)->get(['author_first_name', 'author_last_name'])->first();
+                                    $authorName = "{$author->author_first_name} {$author->author_last_name}";
                                     $publication_date = $record->publication_date;
                                     return "{$authorName}  •  {$publication_date}";
                                 }
@@ -238,6 +245,8 @@ class BookResource extends Resource
 
                         ])->from('md'),
                         // Tinker with Split configurations later
+
+
 
 
 

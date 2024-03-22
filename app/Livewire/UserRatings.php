@@ -2,6 +2,8 @@
 
 namespace App\Livewire;
 
+use App\Models\Author;
+use App\Models\Book;
 use App\Models\Rating;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -16,6 +18,7 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Yepsua\Filament\Tables\Components\RatingColumn;
 
@@ -36,17 +39,51 @@ class UserRatings extends Component implements HasForms, HasTable
                     ->orderBy('created_at', 'desc'))
                 ->columns([
                    Split::make([
-                    ImageColumn::make('book.book_image')
-                    ->grow(false)
-                    ->height(90),
+
                     Stack::make([
-                        TextColumn::make('book.book_name')
+                        TextColumn::make('id')
+                        ->formatStateUsing( function ($state) {
+                            $rating = DB::table('rateables')->select('rateable_type', 'rateable_id')->where('rating_id', $state)->first();
+                            if($rating->rateable_type == Book::class)
+                            {
+                                return Book::find($rating->rateable_id)->book_name;
+                            }
+                            else if($rating->rateable_type == Author::class)
+                            {
+                                $author = Author::find($rating->rateable_id)->get(['author_first_name', 'author_last_name'])->first();
+                                return "{$author->author_first_name} {$author->author_last_name}";
+                            }
+                        })
                         ->weight('bold')
                         ->size('lg'),
+                        TextColumn::make('id')
+                        ->formatStateUsing( function ($state) {
+                            $rating = DB::table('rateables')->select('rateable_type', 'rateable_id')->where('rating_id', $state)->first();
+                            if($rating->rateable_type == Book::class)
+                            {
+                                $book = Book::find($rating->rateable_id);
+                                $genres = [];
 
-                        TextColumn::make('book.publication_date')
-                        ->formatStateUsing(fn ($state, $record) => $state.' • '.$record->book->author->getAuthorName()),
-                        TextColumn::make('book.genres.genre_title')
+                                foreach($book->genres as $genre)
+                                {
+                                    array_push($genres, $genre->genre_title);
+                                }
+
+                                return implode(",",$genres);
+                            }
+                            else if($rating->rateable_type == Author::class)
+                            {
+                                $author = Author::find($rating->rateable_id);
+
+                                $genres = [];
+
+                                foreach($author->genres as $genre)
+                                {
+                                    array_push($genres, $genre->genre_title);
+                                }
+                                return implode(",",$genres);
+                            }
+                        })
                         ->badge()
                         ->limitList(3)
                         ->separator(',')

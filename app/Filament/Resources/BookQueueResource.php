@@ -8,6 +8,7 @@ use App\Models\Author;
 use App\Models\BookQueue;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\Layout\Split;
@@ -31,10 +32,17 @@ class BookQueueResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Select::make('user_id')
-                    ->relationship('user', 'user_name')
+                    ->relationship('user', 'user_name', fn($query) => $query->where('is_admin', false))
                     ->required(),
                 Forms\Components\Select::make('book_id')
+                    ->live()
                     ->relationship('book', 'book_name')
+                    ->afterStateUpdated(function (Set $set, $state)
+                    {
+                        $latestPosition = BookQueue::where('book_id', $state)->orderBy('position', 'desc')->first();
+                        $nextPosition = $latestPosition->position + 1;
+                        $set('position', $nextPosition);
+                    })
                     ->required(),
                 Forms\Components\TextInput::make('position')
                     ->required()

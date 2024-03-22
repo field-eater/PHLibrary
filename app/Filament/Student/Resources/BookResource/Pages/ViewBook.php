@@ -87,7 +87,7 @@ class ViewBook extends ViewRecord
             ->icon('heroicon-c-arrow-up-on-square')
             ->outlined()
             ->color('gray')
-            ->action(function (array $data, $record)
+            ->action(function ($record)
             {
                 $user = auth()->user(); // Assuming user authentication
                 // Find an available copy of the book
@@ -137,7 +137,7 @@ class ViewBook extends ViewRecord
                 {
                     return true;
                 }
-                return false;
+                return true;
             })
         ];
     }
