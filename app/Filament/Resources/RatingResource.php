@@ -14,11 +14,15 @@ use Filament\Forms\Form;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\Alignment;
+use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\Layout\Grid;
 use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\Summarizers\Average;
+use Filament\Tables\Filters\QueryBuilder;
+use Filament\Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint;
+use Filament\Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint\Operators\IsRelatedToOperator;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 
@@ -34,6 +38,8 @@ class RatingResource extends Resource
     protected static ?string $model = Rating::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-star';
+
+    protected static ?int $navigationSort = 4;
 
     protected static ?string $navigationGroup = 'Book Management';
 
@@ -64,11 +70,14 @@ class RatingResource extends Resource
             ->modifyQueryUsing(
                 fn(Builder $query) => $query->orderBy('created_at', 'desc')
             )
-            ->groups([
-                Group::make('books.id')
-                    ->collapsible()
-                    ->label('Book'),
-            ])
+            // ->groups([
+            //     Group::make('books.id')
+            //         ->collapsible()
+            //         ->label('Book'),
+            //     Group::make('authors.id')
+            //         ->collapsible()
+            //         ->label('Author'),
+            // ])
 
             ->columns([
 
@@ -84,7 +93,7 @@ class RatingResource extends Resource
                         }
                         else if($rating->rateable_type == Author::class)
                         {
-                            $author = Author::find($rating->rateable_id)->get(['author_first_name', 'author_last_name'])->first();
+                            $author = Author::find($rating->rateable_id);
                             return "{$author->author_first_name} {$author->author_last_name}";
                         }
 
@@ -92,23 +101,41 @@ class RatingResource extends Resource
                 ),
 
                 Tables\Columns\TextColumn::make('user.user_name')
-                    ->label('User Name')
-                    ->alignment(Alignment::End)
-
-                    ->sortable(),
+                    ->label('Username')
+                    ->alignment(Alignment::End),
                 RatingColumn::make('rating_score')->summarize(Average::make()),
                 Tables\Columns\TextColumn::make('created_at')
                     ->date()
                     ->since(),
             ])
+            ->filtersFormWidth(MaxWidth::ExtraLarge)
             ->filters([
                 //
+                QueryBuilder::make()
+                ->constraints([
+                    // ...
+                    RelationshipConstraint::make('books')
+                    ->selectable(
+                        IsRelatedToOperator::make()
+                            ->titleAttribute('book_name')
+                            ->searchable()
+                            ->multiple(),
+                    ),
+
+                     RelationshipConstraint::make('authors')
+                    ->selectable(
+                        IsRelatedToOperator::make()
+                            ->titleAttribute('author_first_name')
+                            ->searchable()
+                            ->multiple(),
+                    ),
+                    ]),
             ])
             ->actions([])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                // Tables\Actions\BulkActionGroup::make([
+                //     Tables\Actions\DeleteBulkAction::make(),
+                // ]),
             ]);
     }
 

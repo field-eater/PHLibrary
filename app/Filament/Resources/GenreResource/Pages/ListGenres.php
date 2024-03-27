@@ -16,7 +16,7 @@ class ListGenres extends ListRecords
             Actions\CreateAction::make()
                 ->modalWidth('md')
                 ->outlined()
-                ->icon('heroicon-o-rectangle-stack'),
+                ->icon('heroicon-o-rectangle-group'),
         ];
     }
 }

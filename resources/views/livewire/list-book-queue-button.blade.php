@@ -1,9 +1,10 @@
 <div>
     <x-filament::modal alignment="center" class="" slide-over icon="heroicon-c-rectangle-stack">
         <x-slot name="trigger">
-            <x-filament::link icon="heroicon-c-rectangle-stack">
+            <x-filament::button outlined class="w-full" icon="heroicon-c-rectangle-stack">
+                Queues
+            </x-filament::button>
 
-            </x-filament::link>
         </x-slot>
         @if ($record->bookqueues->count() > 0)
         <x-slot name="heading" class="">
@@ -17,6 +18,7 @@
 
             @foreach ($record->bookqueues as $queue)
             <div class="w-full flex justify-between gap-3 my-2 p-3 items-center">
+
                     <div class="flex gap-2 content-center">
                         <x-filament::avatar
                         class="self-center"

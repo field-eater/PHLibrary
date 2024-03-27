@@ -21,6 +21,8 @@ class FavoriteResource extends Resource
     protected static ?string $model = Favorite::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-bookmark';
+
+    protected static ?int $navigationSort = 5;
     protected static ?string $navigationGroup = 'Book Management';
 
     public static function form(Form $form): Form

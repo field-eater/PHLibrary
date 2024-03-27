@@ -47,9 +47,9 @@ class Author extends Model
     {
         return $this->hasMany(Book::class);
     }
-    public function genres()
+    public function genres(): BelongsToMany
     {
-        return $this->belongsToMany(Genre::class, 'author_genre');
+        return $this->belongsToMany(Genre::class);
     }
 
     protected static function boot()

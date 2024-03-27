@@ -56,6 +56,8 @@ class BookResource extends Resource
 
     protected static ?string $navigationGroup = 'Book Management';
 
+    protected static ?int $navigationSort = 1;
+
 
 
 
@@ -173,7 +175,7 @@ class BookResource extends Resource
                     ->schema([
                         InfoSplit::make([
 
-                               InfoGrid::make(1)
+                               InfoGrid::make(2)
                                ->schema([
                                 ImageEntry::make('book_image')
                                 ->label('')
@@ -184,7 +186,9 @@ class BookResource extends Resource
                                 ])
                                 ->grow(false)
                                 ->columnSpanFull(),
-                                Livewire::make(ListBookQueueButton::class),
+                                Livewire::make(ListBookQueueButton::class)
+                                ->columnSpan(1),
+
                                ])->grow(false),
 
                             Section::make(fn (Book $record):string => $record->book_name)

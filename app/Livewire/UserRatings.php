@@ -50,44 +50,20 @@ class UserRatings extends Component implements HasForms, HasTable
                             }
                             else if($rating->rateable_type == Author::class)
                             {
-                                $author = Author::find($rating->rateable_id)->get(['author_first_name', 'author_last_name'])->first();
+                                $author = Author::find($rating->rateable_id);
                                 return "{$author->author_first_name} {$author->author_last_name}";
                             }
                         })
                         ->weight('bold')
                         ->size('lg'),
-                        TextColumn::make('id')
-                        ->formatStateUsing( function ($state) {
-                            $rating = DB::table('rateables')->select('rateable_type', 'rateable_id')->where('rating_id', $state)->first();
-                            if($rating->rateable_type == Book::class)
-                            {
-                                $book = Book::find($rating->rateable_id);
-                                $genres = [];
-
-                                foreach($book->genres as $genre)
-                                {
-                                    array_push($genres, $genre->genre_title);
-                                }
-
-                                return implode(",",$genres);
-                            }
-                            else if($rating->rateable_type == Author::class)
-                            {
-                                $author = Author::find($rating->rateable_id);
-
-                                $genres = [];
-
-                                foreach($author->genres as $genre)
-                                {
-                                    array_push($genres, $genre->genre_title);
-                                }
-                                return implode(",",$genres);
-                            }
-                        })
+                        TextColumn::make('authors.genres.genre_title')
                         ->badge()
-                        ->limitList(3)
+                        ->separator(','),
+                        TextColumn::make('books.genres.genre_title')
+                        ->badge()
                         ->separator(',')
-                        ,
+                        ->limitList(3),
+
                     ])->space(1),
 
                         Stack::make([

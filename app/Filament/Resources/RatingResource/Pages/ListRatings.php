@@ -18,7 +18,6 @@ class ListRatings extends ListRecords
     use ExposesTableToWidgets;
     protected static string $resource = RatingResource::class;
 
-
     protected function getHeaderWidgets(): array
     {
         return [

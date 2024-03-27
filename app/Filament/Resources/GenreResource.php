@@ -26,10 +26,10 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class GenreResource extends Resource
 {
     protected static ?string $model = Genre::class;
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-group';
     protected static ?string $navigationGroup = 'Book Management';
-    protected static ?string $navigationParentItem = 'Books';
-
+    // protected static ?string $navigationParentItem = 'Books';
+    protected static ?int $navigationSort = 3;
     public static function form(Form $form): Form
     {
         return $form

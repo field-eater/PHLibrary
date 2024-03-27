@@ -19,6 +19,7 @@ class Rating extends Model
     [
         'rating_score',
         'user_id',
+
         'comment',
     ];
 
@@ -27,14 +28,14 @@ class Rating extends Model
         return $this->morphedByMany(Book::class, 'rateable')->withPivot('rateable_id');
     }
 
-    public function rateable()
-    {
-        return $this->morphTo;
-    }
-
     public function authors(): MorphToMany
     {
         return $this->morphedByMany(Author::class, 'rateable')->withPivot('rateable_id');
+    }
+
+    public function rateable()
+    {
+        return $this->morphTo;
     }
 
     public function user(): BelongsTo

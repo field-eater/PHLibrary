@@ -42,10 +42,12 @@ class AuthorResource extends Resource
 {
     protected static ?string $model = Author::class;
 
+    protected static ?int $navigationSort = 2;
+
     protected static ?string $navigationIcon = 'heroicon-o-pencil';
 
     protected static ?string $navigationGroup = 'Book Management';
-    protected static ?string $navigationParentItem = 'Books';
+    // protected static ?string $navigationParentItem = 'Books';
 
     public static function generateSlug(
         string $field1Value,
