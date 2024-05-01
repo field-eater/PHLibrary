@@ -156,7 +156,7 @@ class BorrowResource extends Resource
                     ->modalWidth('sm')
                     ->action(function ($record, array $data) {
                         $record->estimated_return_date = $data['estimated_return_date'];
-                        $bookCopies = BookCopy::whereBelongsTo($record->book_id);
+                        $bookCopies = BookCopy::where('book_id',$record->book_id);
                         foreach ($bookCopies as $copy) {
                             if ($copy->status == BookCopyStatusEnum::Available)
                             {

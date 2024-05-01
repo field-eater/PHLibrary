@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use App\Observers\BookQueueObserver;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+
 
 class BookQueue extends Model
 {
@@ -27,4 +30,7 @@ class BookQueue extends Model
     {
         return $this->belongsTo(Book::class);
     }
+
+
+
 }

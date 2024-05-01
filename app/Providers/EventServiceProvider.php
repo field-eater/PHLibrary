@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\BookQueue;
+use App\Models\Borrow;
+use App\Observers\BookQueueObserver;
+use App\Observers\BorrowObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -26,6 +30,8 @@ class EventServiceProvider extends ServiceProvider
     public function boot(): void
     {
         //
+        BookQueue::observe(BookQueueObserver::class);
+        Borrow::observe(BorrowObserver::class);
     }
 
     /**
