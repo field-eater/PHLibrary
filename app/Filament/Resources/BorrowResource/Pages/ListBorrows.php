@@ -23,14 +23,25 @@ class ListBorrows extends ListRecords
     }
     public function getTabs(): array
     {
+
+        $pending = Borrow::query()
+        ->where('return_status', 'pending')
+        ->count();
+
+        $borrowed =   Borrow::query()
+        ->where('return_status', 'borrowed')
+        ->count();
+
+        $returned =   Borrow::query()
+        ->where('return_status', 'returned')
+        ->count();
+
         return [
             'all' => Tab::make()->icon('heroicon-o-bookmark-square'),
             'pending' => Tab::make()
                 ->icon('heroicon-o-arrow-path')
                 ->badge(
-                    Borrow::query()
-                        ->where('return_status', 'pending')
-                        ->count()
+                    $pending != 0 ? $pending : null,
                 )
                 ->modifyQueryUsing(
                     fn(Builder $query) => $query->where(
@@ -40,7 +51,9 @@ class ListBorrows extends ListRecords
                 ),
             'borrowed' => Tab::make()
                 ->icon('heroicon-o-hand-raised')
-
+                ->badge(
+                    $borrowed != 0 ? $borrowed : null,
+                )
                 ->modifyQueryUsing(
                     fn(Builder $query) => $query->where(
                         'return_status',
@@ -49,7 +62,9 @@ class ListBorrows extends ListRecords
                 ),
             'returned' => Tab::make()
                 ->icon('heroicon-m-arrows-pointing-in')
-
+                ->badge(
+                    $returned != 0 ? $returned : null,
+                )
                 ->modifyQueryUsing(
                     fn(Builder $query) => $query->where(
                         'return_status',

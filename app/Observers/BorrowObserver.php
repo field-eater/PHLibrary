@@ -6,6 +6,9 @@ use App\Enums\BorrowStatusEnum;
 use App\Models\Book;
 use App\Models\BookQueue;
 use App\Models\Borrow;
+use App\Models\User;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Auth;
 
 class BorrowObserver
 {
@@ -17,6 +20,8 @@ class BorrowObserver
         //
     }
 
+
+
     /**
      * Handle the Borrow "updated" event.
      */
@@ -26,6 +31,16 @@ class BorrowObserver
         if ($borrow->return_status == BorrowStatusEnum::Returned)
         {
            $firstQueue =  BookQueue::where('book_id', $borrow->book_id)->where('position', 1)->first('user_id');
+
+
+           $bookTitle = Book::find($borrow->book_id)->first('book_name');
+            $recipient = User::find($borrow->user_id);
+
+           Notification::make()
+           ->title('Borrow Request')
+           ->body('Your requested book: '.$bookTitle->book_name. 'is now available, a borrow request has been made ')
+           ->info()
+           ->sendToDatabase($recipient);
            Borrow::create(
             [
                 'user_id' => $firstQueue->user_id,
@@ -36,10 +51,11 @@ class BorrowObserver
             ]
             );
 
-           $firstQueue->decrement('position');
             $firstQueue->delete();
+
             $bookQueue = BookQueue::where('book_id', $borrow->book_id)->get();
             $bookQueue->each->decrement('position');
+
         }
     }
 

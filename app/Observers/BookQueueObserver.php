@@ -19,11 +19,8 @@ class BookQueueObserver
      */
     public function updated(BookQueue $bookQueue): void
     {
-        //
-        if ($bookQueue->position == 0) {
 
-            $bookQueue->delete();
-        }
+
     }
 
     /**
@@ -32,6 +29,8 @@ class BookQueueObserver
     public function deleted(BookQueue $bookQueue): void
     {
         //
+    $queues = BookQueue::where('book_id', $bookQueue->book_id)->where('position', '>', $bookQueue->position) ;
+       $queues->decrement('position');
     }
 
     /**
